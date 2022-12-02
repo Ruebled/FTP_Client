@@ -1,5 +1,0 @@
-#ifndef FUNCTION_EVALUATE_H
-#define FUNCTION_EVALUATE_H
-
-
-#endif

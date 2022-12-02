@@ -1,11 +1,13 @@
+#include <stdlib.h>
 
-
-int ftp_open(param)
+int ftp_execute(input)
 {
 	return 0;
 }
 
-int ftp_send(param)
+char* ftp_response(socketaddr)
 {
-	return 0;
+	char* str;
+	str = (char*)malloc(1);
+	return str;
 }
