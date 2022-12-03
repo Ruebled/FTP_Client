@@ -3,18 +3,19 @@ if &cp | set nocp | endif
 let s:cpo_save=&cpo
 set cpo&vim
 inoremap <silent> <Plug>(ale_complete) :ALEComplete
+nnoremap <silent>  :noh
 nnoremap   za
 nnoremap B ^
 nnoremap E $
-nmap \w\m <Plug>VimwikiMakeTomorrowDiaryNote
-nmap \w\y <Plug>VimwikiMakeYesterdayDiaryNote
-nmap \w\t <Plug>VimwikiTabMakeDiaryNote
-nmap \w\w <Plug>VimwikiMakeDiaryNote
-nmap \w\i <Plug>VimwikiDiaryGenerateLinks
-nmap \wi <Plug>VimwikiDiaryIndex
-nmap \ws <Plug>VimwikiUISelect
-nmap \wt <Plug>VimwikiTabIndex
 nmap \ww <Plug>VimwikiIndex
+nmap \wt <Plug>VimwikiTabIndex
+nmap \ws <Plug>VimwikiUISelect
+nmap \wi <Plug>VimwikiDiaryIndex
+nmap \w\i <Plug>VimwikiDiaryGenerateLinks
+nmap \w\w <Plug>VimwikiMakeDiaryNote
+nmap \w\t <Plug>VimwikiTabMakeDiaryNote
+nmap \w\y <Plug>VimwikiMakeYesterdayDiaryNote
+nmap \w\m <Plug>VimwikiMakeTomorrowDiaryNote
 xmap gx <Plug>NetrwBrowseXVis
 nmap gx <Plug>NetrwBrowseX
 noremap gV `[v`]
@@ -63,6 +64,13 @@ nnoremap <silent> <Plug>(ale_previous_wrap) :ALEPreviousWrap
 nnoremap <silent> <Plug>(ale_previous) :ALEPrevious
 xnoremap <silent> <Plug>NetrwBrowseXVis :call netrw#BrowseXVis()
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(netrw#GX(),netrw#CheckIfRemote(netrw#GX()))
+inoremap " ""<Left>
+inoremap ' ''<Left>
+inoremap ( ()<Left>
+inoremap [ []<Left>
+inoremap { {}<Left>
+inoremap {; {<BS>};O
+inoremap { {<BS>}O
 let &cpo=s:cpo_save
 unlet s:cpo_save
 set autoindent
@@ -80,7 +88,7 @@ set incsearch
 set laststatus=2
 set lazyredraw
 set ruler
-set runtimepath=~/.vim,~/.vim/pack/git-plugins/start/ale,~/.vim/bundle/Vundle.vim,~/.vim/bundle/gruvbox,~/.vim/bundle/vimwiki,~/.vim/bundle/vim-airline,/usr/share/vim/vimfiles,/usr/share/vim/vim90,/usr/share/vim/vimfiles/after,~/.vim/after,~/.vim/bundle/Vundle.vim,~/.vim/bundle/Vundle.vim/after,~/.vim/bundle/gruvbox/after,~/.vim/bundle/vimwiki/after,~/.vim/bundle/vim-airline/after,/usr/local/lib/python2.7/dist-packages/powerline/bindings/vim/
+set runtimepath=~/.vim,~/.vim/bundle/Vundle.vim,~/.vim/bundle/gruvbox,~/.vim/bundle/vim-airline,~/.vim/pack/git-plugins/start/ale,~/.vim/bundle/Vundle.vim,~/.vim/bundle/gruvbox,~/.vim/bundle/vimwiki,~/.vim/bundle/vim-airline,/usr/share/vim/vimfiles,/usr/share/vim/vim90,/usr/share/vim/vimfiles/after,~/.vim/after,~/.vim/bundle/Vundle.vim,~/.vim/bundle/Vundle.vim/after,~/.vim/bundle/gruvbox/after,~/.vim/bundle/vimwiki/after,~/.vim/bundle/vim-airline/after,/usr/local/lib/python2.7/dist-packages/powerline/bindings/vim/,~/.vim/bundle/Vundle.vim/after,~/.vim/bundle/gruvbox/after,~/.vim/bundle/vim-airline/after
 set shiftwidth=4
 set showmatch
 set smarttab
@@ -90,6 +98,8 @@ set tabline=%!py3eval('powerline.tabline()')
 set tabstop=4
 set undodir=~/.vim/.undo//
 set wildmenu
+set winminheight=0
+set winminwidth=0
 let s:so_save = &g:so | let s:siso_save = &g:siso | setg so=0 siso=0 | setl so=-1 siso=-1
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -103,16 +113,16 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +0 client.c
-badd +0 README.md
-badd +0 check.c
-badd +0 check.h
-badd +0 ftpcommands.c
-badd +0 reply_process.c
-badd +0 reply_process.h
-badd +0 ftpcommands.h
-badd +0 ftp_data.c
-badd +0 ftp_data.h
+badd +1 client.c
+badd +1 README.md
+badd +1 check.c
+badd +1 check.h
+badd +1 ftpcommands.c
+badd +1 reply_process.c
+badd +1 reply_process.h
+badd +1 ftpcommands.h
+badd +1 ftp_data.c
+badd +1 ftp_data.h
 argglobal
 %argdel
 $argadd client.c
@@ -230,7 +240,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(2)')
+setlocal statusline=%!py3eval('powerline.statusline(1)')
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -257,18 +267,16 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-28
+30
 normal! zo
-47
+49
 normal! zo
-55
-normal! zo
-let s:l = 10 - ((9 * winheight(0) + 27) / 54)
+let s:l = 64 - ((36 * winheight(0) + 27) / 54)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 10
-normal! 021|
+keepjumps 64
+normal! 0
 tabnext
 edit ftp_data.h
 let s:save_splitbelow = &splitbelow
@@ -397,7 +405,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(10)')
+setlocal statusline=%!airline#statusline(1)
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -540,7 +548,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(9)')
+setlocal statusline=%!airline#statusline(2)
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -704,7 +712,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(7)')
+setlocal statusline=%!airline#statusline(1)
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -847,7 +855,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(6)')
+setlocal statusline=%!airline#statusline(2)
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -1011,7 +1019,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(8)')
+setlocal statusline=%!airline#statusline(1)
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -1154,7 +1162,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(5)')
+setlocal statusline=%!airline#statusline(2)
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -1318,7 +1326,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(4)')
+setlocal statusline=%!py3eval('powerline.statusline(1)')
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -1345,11 +1353,11 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 10 - ((9 * winheight(0) + 27) / 54)
+let s:l = 9 - ((8 * winheight(0) + 27) / 54)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 10
+keepjumps 9
 normal! 0
 wincmd w
 argglobal
@@ -1409,7 +1417,7 @@ set foldnestmax=10
 setlocal foldnestmax=10
 setlocal foldtext=foldtext()
 setlocal formatexpr=
-setlocal formatoptions=croql
+setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\%(\\(-\\|\\*\\|+\\)\\|\\(\\C\\%(\\d\\+\\.\\)\\)\\)\\s\\+\\%(\\[\\([\ .oOX-]\\)\\]\\s\\)\\?
 setlocal formatprg=
 setlocal grepprg=
@@ -1461,7 +1469,7 @@ setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
 setlocal spelloptions=
-setlocal statusline=%!py3eval('powerline.statusline(3)')
+setlocal statusline=%!py3eval('powerline.statusline(2)')
 setlocal suffixesadd=
 setlocal swapfile
 setlocal synmaxcol=3000
@@ -1488,16 +1496,19 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 7 - ((6 * winheight(0) + 27) / 54)
+42
+normal! zo
+let s:l = 80 - ((47 * winheight(0) + 27) / 54)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 7
-normal! 0
+keepjumps 80
+normal! 045|
 wincmd w
+2wincmd w
 exe 'vert 1resize ' . ((&columns * 113 + 113) / 226)
 exe 'vert 2resize ' . ((&columns * 112 + 113) / 226)
-tabnext 1
+tabnext 5
 set stal=1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf

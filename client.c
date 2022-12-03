@@ -57,10 +57,6 @@ int main(int argc, char *argv[])
 			if(status->is_connected)
 			{
 				int code = ftp_execute(command);
-				if (code == 0)//quit command cause exit code of function 'ftp_execute()' to be 0 
-				{
-					exit(0);
-				}
 
 				char *reply = ftp_response(status->socketaddr);
 				process_res(reply);
@@ -74,15 +70,10 @@ int main(int argc, char *argv[])
 		{
 			break;
 		}
-		else
-		{
-			printf("Command Not Valid\n");
-		}
-		
 	}
 	
 	//dealloc ftp connection status data and dealloc status pointer
-	delete_server_status(status);
+	//delete_server_status(status);
 
 	free(command);
 	free(reply);

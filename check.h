@@ -9,4 +9,8 @@ int check_port(char*);
 
 int check_local_filename(char*);
 
+int check_command(char*);
+
+char* toUP(char*);
+
 #endif
