@@ -71,8 +71,8 @@ int check_input_validity(char* inp)
 	else if (par_ev == sizeof(available_commands)) return -1;
 	
 	int is_full;
-	is_full = is_occupied(args[4]);
-	if (is_full>command_param_check[par_ev][0] && is_full<command_param_check[1])
+	is_full = is_occupied(&args[4]);
+	if (is_full>command_param_check[par_ev][0]) 
 	{
 		printf("Too many arguments");
 		return 0;
@@ -89,8 +89,17 @@ int check_input_validity(char* inp)
 		//or return something meaningfull
 		//like the args array
 	}
+	return 1;	
 }
 
+int is_occupied(char *args[4])
+{
+	for (int i=0; i<4; i++)
+	{
+		if (args[i]==NULL) return i;
+	}
+	return 4;
+}
 int check_command(char *com)
 {
 	char *com_UPCASE;
@@ -104,15 +113,17 @@ int check_command(char *com)
 
 int check_ip(char* ip)
 {
+	return 0;
 }
 
 int check_port(char* port)
 {
-	
+	return 0;	
 }
 
 int check_local_filename(char* filename)
 {
+	return 0;
 }
 
 //some tools function maybe move in 

@@ -13,4 +13,6 @@ int check_command(char*);
 
 char* toUP(char*);
 
+int is_occupied(char* []);
+
 #endif

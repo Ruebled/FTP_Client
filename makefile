@@ -1,5 +1,5 @@
 # The name of the source files
-SOURCES = client.c check.h ftpcommands.c ftp_data.c reply_process.c socketfunc.c trim.c
+SOURCES = client.c check.c ftpcommands.c ftp_data.c reply_process.c socketfunc.c trim.c
 #
 # # The name of the executable
 EXE = client
@@ -33,14 +33,15 @@ $(EXE): $(OBJECTS)
 
 # This is a target that will compiler all needed source files into object files
 # We don't need to specify a command or any rules, "make" will handle it automatically
-%.o: %.c
+#%.o: %.c
 #
 # # Target to clean up after us
-# clean:
-#	-rm -f $(EXE)      # Remove the executable file
-#	-rm -f $(OBJECTS)  # Remove the object files
+clean:
+	-rm -f $(EXE)      # Remove the executable file
+	-rm -f $(OBJECTS)  # Remove the object files
 
 # Finally we need to tell "make" what source and header file each object file depends on
+client.o: client.c check.h
 check.o: check.c check.h
 ftpcommands.o: ftpcommands.c ftpcommands.h
 ftp_data.o: ftp_data.c ftp_data.h
