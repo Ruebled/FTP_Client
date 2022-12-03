@@ -11,8 +11,10 @@ int check_local_filename(char*);
 
 int check_command(char*);
 
-char* toUP(char*);
+void toUP(char*);
 
 int is_occupied(char* []);
+
+int conv_to_num(char*);
 
 #endif

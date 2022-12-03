@@ -5,7 +5,8 @@ SOURCES = client.c check.c ftpcommands.c ftp_data.c reply_process.c socketfunc.c
 EXE = client
 #
 # # Flags for compilation (adding warnings are always good)
-CFLAGS = -Wall
+CFLAGS = -Wall -g
+
 #
 # # Flags for linking (none for the moment)
 LDFLAGS =

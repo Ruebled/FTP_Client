@@ -52,8 +52,11 @@ int main(int argc, char *argv[])
 		fgets(command, 1000, stdin);
 		command = trim(command);
 
-		if(check_input_validity(command))
+		int valid = check_input_validity(command);
+
+		if(valid>0)
 		{
+			printf("Got in\n");
 			if(status->is_connected)
 			{
 				int code = ftp_execute(command);
@@ -66,7 +69,7 @@ int main(int argc, char *argv[])
 				printf("Not connected\n");
 			}
 		}
-		else if (check_input_validity(command)==-1)
+		else if (valid == -1)
 		{
 			break;
 		}
@@ -75,7 +78,6 @@ int main(int argc, char *argv[])
 	//dealloc ftp connection status data and dealloc status pointer
 	//delete_server_status(status);
 
-	free(command);
 	free(reply);
 	return 0;	
 }
