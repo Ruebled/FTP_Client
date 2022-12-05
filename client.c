@@ -6,7 +6,6 @@
 #include "trim.h"
 #include "check.h"
 #include "ftpcommands.h"
-#include "reply_process.h"
 #include "ftp_data.h"
 
 
@@ -36,10 +35,6 @@ int main(int argc, char *argv[])
 	char *command;
 	command = (char*)malloc(1000*sizeof(char));
 
-	//char* variable for storing server response
-	char *reply;
-	//reply = (char*)malloc(1000*sizeof(char));
-
 	//create structure to store ftp status data
 	create_server_status();
 	
@@ -53,35 +48,13 @@ int main(int argc, char *argv[])
 		//get rid of any before or after spaces
 		trim(command);
 		
-		//split the string by " " character
-		char** args;		
-		args = split_to_array(command, " ");
 
-		//check if the given string is a valid existing command
-		//also check it's parameters based on the command
-		int valid = check_input_validity(args);
-
-
-		if(valid>0)
-		{
-			ftp_execute(args);
-
-			reply = ftp_response();
-
-			printf("%s", reply);
-
-			process_res(reply);
-		}
-		else if (valid == -1)
+		if(check_command(command)==-1)
 		{
 			break;
 		}
-		free(args);
+
 	}
-	
-	//dealloc ftp connection status data and dealloc status pointer
-	//delete_server_status(status);
-	free(temp);
-	//free(reply);
+
 	return 0;	
 }

@@ -4,114 +4,46 @@
 #include <ctype.h>
 
 #include "check.h"
+#include "ftpcommands.h"
+#include "trim.h"
 
-//remember keeping QUIT as the last word in the array!!!
-char* available_commands[] =
-{	
-	"OPEN",
-	"LS",
-	"PASS",
-	"CWD",
-	"RMD",
-	"MKD",
-	"PWD",
-	"RETR",
-	"STOR",
-	"LIST",
-	"ABOR",
-	"QUIT"
-};
 
-#define arrow 4
-int command_param_check[][arrow] =
-{
-//  Defined like:
-//  P, M, F, S ->
-	{3, 2, 1, 2},
-	{2, 1, 0, 0},
-	{2, 1, 0, 0},
-	{2, 1, 0, 0},
-	{2, 1, 0, 0}
-// P -> posible number of arguments
-// M -> mandatory number of present arguments
-// F -> check function to be performed on first argument
-// S -> check function to be performed on second argument
-};
-	
-//check for input string to be an well written
-//command for send to server
-int check_input_validity(char **args)
-{
-	//check if the command exist in the defined ones
-	//par_ev take
-	//			-1 if command is not defined
-	//			a natural number representing command index position in
-	//				available_commands array
-	int par_ev = check_command(*args);	
-	//
 
-	//if block to intrerupt current function in case of
-	// -1 -> not existing command
-	// last index of the "available_commands" here defined as QUIT
-	if (par_ev == -1)
-	{
-		printf("?Undefined command\n");
-		return 0;
-	}	
-	else if (par_ev == ((sizeof(available_commands)/8)-1)) return -1;
-
-	//check for the number of the given arguments
-	//checked with a list of P.M.F.S(see at the top)
-	//arguments for each existing command
-	int is_full = is_occupied(args);
-
-	if (is_full>command_param_check[par_ev][0]) 
-	{
-		printf("Too many arguments\n");
-		return 0;
-	}
-	else if (is_full<command_param_check[par_ev][1])
-	{
-		printf("Not enough arguments\n");
-		return 0;
-	}
-	
-	//
-	if(command_param_check[par_ev][2] == 1 && !check_ip(args[1])) 
-	{
-		printf("Bad IP\n");
-		return 0;
-	}
-
-	if(command_param_check[par_ev][3] == 2 && !check_port(args[2])) 
-	{
-		printf("Bad PORT\n");
-		return 0;
-	}
-
-	if(command_param_check[par_ev][2] == 3 && !check_local_filename(args[1])) 
-	{	
-		printf("Filename not exists in current directory\n");
-		return 0;
-	}
-
-	return 1;
-}
-
-//function that check the equallity between the given word as command
-//and the existing command in the available_commands array
 int check_command(char *com)
 {
-	toUP(com);
-	for (int i=0; i<sizeof(available_commands)/8; i++)
+	//call the function name than is the same
+	//as the first word in com
+	
+	char **args = split_to_array(com, " ");
+
+	toUP(*args);
+
+	if (!strcmp(*args, ""))
 	{
-		if (!strcmp(com, available_commands[i])) 
+		return 0;	
+	}
+
+	if (!strcmp(*args,"OPEN"))
+	{
+		if(ftp_open(args++))
 		{
-			return i;
+			return 1;
+		}
+		else
+		{
+			return 0;
 		}
 	}
-	return -1;
+	if (!strcmp(*args, "QUIT"))
+	{
+		return -1;
+	}
+
+	printf("Unknown command\n");
+	return 0;
 }
+//
+
 //
 
 //check for rightness of the ip here for IPv4
@@ -120,6 +52,8 @@ int check_command(char *com)
 //param_check index 1
 int check_ip(char* ip)
 {
+	char *temp= malloc(sizeof(char)*20);
+	strcpy(temp, ip);
 	const char *ch = ".";
 	char *token;
 	char* args[4];
@@ -130,15 +64,19 @@ int check_ip(char* ip)
 	
 	int count = 0;
 
-	token = strtok(ip, ch);
+	token = strtok(temp, ch);
 
 	while( token != NULL)
 	{
-		if (count>3) return 0;
-		args[count++] = token;
+		if (count>3)
+		{
+			free(temp);
+			return 0;
+		}
+		strcpy(args[count++], token);
 		token = strtok(NULL, ch);	
 	}
-
+	free(temp);
 	if (count<4) return 0; 
 
 	//check if is number in range
@@ -167,7 +105,7 @@ int check_port(char* port)
 {
 	int res = conv_to_num(port);
 	if (res<0 || res>65535) return 0;
-	return 1;	
+	return res;	
 }
 //
 
@@ -191,11 +129,11 @@ void toUP(char* comd)
 	}
 }
 
-int is_occupied(char *args[])
+int is_occupied(char **args)
 {
 	for (int i=0; i<4; i++)
 	{
-		if (*args[i] == '\0') return i;
+		if (!strcmp(*(args+i),"")) return i;
 	}
 	return 4;
 }
@@ -205,7 +143,7 @@ int conv_to_num(char* str)
 	//return the converted number
 	//if no more that 5 character lenght
 	//-1 otherwise
-	if (strlen(str)>5) return 0;
+	if (strlen(str)>5) return -1;
 
 	for (int i=0; i<strlen(str); i++)
 	{
@@ -233,20 +171,8 @@ char**  split_to_array(char* str, const char *ch)
 	
 		while( token != NULL && count<4)
 		{
-			*(args+count++) = token;
+			*(args+count++) = trim(token);
 			token = strtok(NULL, ch);	
 		}
 	return args;
-}
-
-char* get_string(char**args)
-{
-	char* str=malloc(sizeof(char)*1000);
-	int i=0;
-	while(*(args+i)!=NULL)
-	{
-		sprintf(str,"%s %s",str, *args);
-	}
-	sprintf(str, "%s\n",str);
-	return str;
 }

@@ -1,8 +1,6 @@
 #ifndef CHECK_H
 #define CHECK_H
 
-int check_input_validity(char**);
-
 int check_ip(char*);
 
 int check_port(char*);
@@ -19,6 +17,6 @@ int conv_to_num(char*);
 
 char** split_to_array(char*, const char*);
 
-char* get_string(char**args);
+//char* get_string(char**args);
 
 #endif

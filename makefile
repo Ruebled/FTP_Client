@@ -1,5 +1,5 @@
 # The name of the source files
-SOURCES = client.c check.c ftpcommands.c ftp_data.c reply_process.c socketfunc.c trim.c
+SOURCES = client.c check.c ftpcommands.c ftp_data.c socketfunc.c trim.c
 #
 # # The name of the executable
 EXE = client
@@ -42,10 +42,9 @@ clean:
 	-rm -f $(OBJECTS)  # Remove the object files
 
 # Finally we need to tell "make" what source and header file each object file depends on
-client.o: client.c check.h
-check.o: check.c check.h
-ftpcommands.o: ftpcommands.c ftpcommands.h
+client.o: client.c check.h trim.h ftpcommands.h ftp_data.h
+check.o: check.c check.h ftpcommands.h trim.h
+ftpcommands.o: ftpcommands.c ftpcommands.h ftp_data.h socketfunc.h check.h
 ftp_data.o: ftp_data.c ftp_data.h
-reply_process.o: reply_process.c reply_process.h
-socketfunc.o: socketfunc.c socketfunc.h
+socketfunc.o: socketfunc.c socketfunc.h ftp_data.h
 trim.o: trim.c trim.h
