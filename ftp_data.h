@@ -19,4 +19,9 @@ int get_socket_addr();
 
 void change_socket_addr(int);
 
+void create_server_data();
+
+void change_socket_data_addr(int);
+int get_data_addr();
+
 #endif

@@ -9,4 +9,10 @@ int server_send(int, char*, int);
 
 char* server_receive();
 
+void create_server_data();
+
+char* server_data_receive();
+
+int create_data_socket();
+
 #endif

@@ -25,14 +25,19 @@ int check_command(char *com)
 
 	if (!strcmp(*args,"OPEN"))
 	{
-		if(ftp_open(args++))
+		if(ftp_open(args))
 		{
 			return 1;
 		}
-		else
+		return 0;
+	}
+	if (!strcmp(*args, "LS"))
+	{
+		if(ftp_ls(args))
 		{
-			return 0;
-		}
+			return 1;
+		}	
+		return 0;
 	}
 	if (!strcmp(*args, "QUIT"))
 	{

@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "ftp_data.h"
 
@@ -11,6 +12,7 @@
 //AF_INET represent address family, mean uses IPv4
 //SOCK_STREAM means connection oriented protocol aka. TCP
 //try on creating a socket
+//
 
 
 //define structure for ftp connection needed data
@@ -37,8 +39,7 @@ int server_connect(int socket_desc, char *IP, int PORT)
 {
 	//basic definitions of the server 
 	server.sin_addr.s_addr = inet_addr(IP);
-	server.sin_family = AF_INET;
-	server.sin_port = htons(PORT);
+	server.sin_family = AF_INET; server.sin_port = htons(PORT);
 	
 	response = connect(socket_desc, (struct sockaddr *)&server, sizeof(server));
 	
@@ -54,11 +55,41 @@ int server_send(int socket_desc, char *message, int message_len)
 	return response;
 }
 
-char server_reply[2000];
+char* server_reply;
 
 char *server_receive()
 {
+	server_reply = (char*)malloc(sizeof(char)*2000);
+
 	int socket_desc = get_socket_addr();
 	recv(socket_desc, server_reply, message_length, 0);
 	return server_reply;
+}
+
+///Data socket request
+
+
+char* server_data;
+
+int create_data_socket()
+{
+	int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+	if (socket_desc>0)
+	{
+		change_socket_addr(socket_desc);
+		return socket_desc;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+char *server_data_receive()
+{
+	server_data = (char*)malloc(sizeof(char)*2000);
+
+	int socket_desc = get_data_addr();
+	recv(socket_desc, server_data, message_length, 0);
+	return server_data;
 }

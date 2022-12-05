@@ -112,7 +112,7 @@ int ftp_open(char **args) {
 					}
 					sr = server_receive();
 					printf("%s", sr);
-					if (strcmp(strtok(sr, " "), "331"))
+					if (!strcmp(strtok(sr, " "), "331"))
 					{
 						printf("PASS: ");
 						fgets(str, 50, stdin);
@@ -153,26 +153,82 @@ int ftp_open(char **args) {
 }
 
 //FTP LS
-int ftp_ls(char* dir_name)
+int ftp_ls(char** args)
 {
 	if(is_connected())
 	{
-		if (server_send(get_socket_addr(), "LS\n", strlen("LS\n"))<0)
+		
+		if (server_send(get_socket_addr(), "EPSV\n", strlen("EPSV\n"))<0)
 		{
 			printf("Error sending the LS command\n");
 			return 0;
 		}
 		char* sr;
 		sr = server_receive();
-		while(sr!=NULL)
+		printf("%s",sr);
+
+		create_server_data();
+		create_data_socket();
+
+		char*stu = malloc(sizeof(char)*10);
+		fgets(stu, 10, stdin);
+		trim(stu);	
+		if(server_connect(get_data_addr(), "192.168.0.106", conv_to_num(stu))<0)
 		{
-			printf("%s",sr);
-			sr = server_receive();
+			printf("Couldn't connect to data server\n");
+
 		}
+		if (server_send(get_socket_addr(), "LIST\n", strlen("LIST\n"))<0)
+		{
+			printf("Error sending the LS command\n");
+			return 0;
+		}
+		//char* sr;
+		sr = server_data_receive();
+		printf("%s",sr);
+		free(sr);
 		return 1;
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
 	return 0;
 }
 
-//FTP 
+//FTP QUIT
+
+//The following are the FTP commands:
+//
+//            USER <SP> <username> <CRLF>
+//            PASS <SP> <password> <CRLF>
+//            ACCT <SP> <account-information> <CRLF>
+//            CWD  <SP> <pathname> <CRLF>
+//            CDUP <CRLF>
+//            SMNT <SP> <pathname> <CRLF>
+//            QUIT <CRLF>
+//            REIN <CRLF>
+//            PORT <SP> <host-port> <CRLF>
+//            PASV <CRLF>
+//            TYPE <SP> <type-code> <CRLF>
+//            STRU <SP> <structure-code> <CRLF>
+//            MODE <SP> <mode-code> <CRLF>
+//            RETR <SP> <pathname> <CRLF>
+//            STOR <SP> <pathname> <CRLF>
+//            STOU <CRLF>
+//            APPE <SP> <pathname> <CRLF>
+//            ALLO <SP> <decimal-integer>
+//                [<SP> R <SP> <decimal-integer>] <CRLF>
+//            REST <SP> <marker> <CRLF>
+//            RNFR <SP> <pathname> <CRLF>
+//            RNTO <SP> <pathname> <CRLF>
+//            ABOR <CRLF>
+//            DELE <SP> <pathname> <CRLF>
+//            RMD  <SP> <pathname> <CRLF>
+//            MKD  <SP> <pathname> <CRLF>
+//            PWD  <CRLF>
+//            LIST [<SP> <pathname>] <CRLF>
+//            NLST [<SP> <pathname>] <CRLF>
+//            SITE <SP> <string> <CRLF>
+//            SYST <CRLF>
+//            STAT [<SP> <pathname>] <CRLF>
+//            HELP [<SP> <string>] <CRLF>
+//            noop <crlf>
+// 

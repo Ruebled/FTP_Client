@@ -32,3 +32,25 @@ void change_socket_addr(int socket_addr)
 {
 	status->socketaddr = socket_addr;
 }
+
+
+
+struct server_status *data;
+
+void create_server_data()
+{
+	data = (struct server_status*)malloc(sizeof(struct server_status));
+
+	data->is_connected = 0;
+	data->socketaddr = -1;
+}
+
+void change_socket_data_addr(int socket_addr)
+{
+	data->socketaddr = socket_addr;
+}
+
+int get_data_addr()
+{
+	return data->socketaddr;
+}
