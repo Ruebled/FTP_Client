@@ -9,6 +9,14 @@ struct server_status
 
 };
 
-struct server_status* create_server_status();
+void create_server_status();
+
+int is_connected();
+
+void toogle_is_connected();
+
+int get_socket_addr();
+
+void change_socket_addr(int);
 
 #endif

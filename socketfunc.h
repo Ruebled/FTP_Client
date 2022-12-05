@@ -3,9 +3,9 @@
 
 int create_socket();
 
-int server_connect(char*, int);
+int server_connect(int, char*, int);
 
-int server_send(char *);
+int server_send(int, char*, int);
 
 char* server_receive();
 

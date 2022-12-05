@@ -38,11 +38,10 @@ int main(int argc, char *argv[])
 
 	//char* variable for storing server response
 	char *reply;
-	reply = (char*)malloc(1000*sizeof(char));
+	//reply = (char*)malloc(1000*sizeof(char));
 
 	//create structure to store ftp status data
-	struct server_status *status;
-	status = create_server_status();
+	create_server_status();
 	
 	while(1)
 	{
@@ -50,34 +49,39 @@ int main(int argc, char *argv[])
 		//get string input from stdin
 		printf("ftp--> ");
 		fgets(command, 1000, stdin);
-		command = trim(command);
 
-		int valid = check_input_validity(command);
+		//get rid of any before or after spaces
+		trim(command);
+		
+		//split the string by " " character
+		char** args;		
+		args = split_to_array(command, " ");
+
+		//check if the given string is a valid existing command
+		//also check it's parameters based on the command
+		int valid = check_input_validity(args);
+
 
 		if(valid>0)
 		{
-			printf("Got in\n");
-			if(status->is_connected)
-			{
-				int code = ftp_execute(command);
+			ftp_execute(args);
 
-				char *reply = ftp_response(status->socketaddr);
-				process_res(reply);
-			}
-			else
-			{
-				printf("Not connected\n");
-			}
+			reply = ftp_response();
+
+			printf("%s", reply);
+
+			process_res(reply);
 		}
 		else if (valid == -1)
 		{
 			break;
 		}
+		free(args);
 	}
 	
 	//dealloc ftp connection status data and dealloc status pointer
 	//delete_server_status(status);
-
-	free(reply);
+	free(temp);
+	//free(reply);
 	return 0;	
 }

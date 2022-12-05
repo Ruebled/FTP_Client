@@ -2,6 +2,9 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <errno.h>
+
+#include "ftp_data.h"
 
 #define message_length 2000
 
@@ -19,18 +22,28 @@ static int response;
 int create_socket()
 {
 	int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-	return socket_desc;
+	if (socket_desc>0)
+	{
+		change_socket_addr(socket_desc);
+		return socket_desc;
+	}
+	else
+	{
+		return -1;
+	}
 }
 
 int server_connect(int socket_desc, char *IP, int PORT)
 {
-	//basic definitions of the server localhost to 80 port if not provided
+	//basic definitions of the server 
 	server.sin_addr.s_addr = inet_addr(IP);
 	server.sin_family = AF_INET;
 	server.sin_port = htons(PORT);
 	
 	response = connect(socket_desc, (struct sockaddr *)&server, sizeof(server));
 	
+	//printf("%d\n", errno);
+
 	return response;
 }
 
@@ -43,8 +56,9 @@ int server_send(int socket_desc, char *message, int message_len)
 
 char server_reply[2000];
 
-char *server_receive(int socket_desc)
+char *server_receive()
 {
+	int socket_desc = get_socket_addr();
 	recv(socket_desc, server_reply, message_length, 0);
 	return server_reply;
 }

@@ -40,34 +40,14 @@ int command_param_check[][arrow] =
 	
 //check for input string to be an well written
 //command for send to server
-int check_input_validity(char *inp)
+int check_input_validity(char **args)
 {
-	//create array for storing each work of the char* inp
-	const char *ch = " ";
-	char *token;
-	char* args[4];
-	for (int i=0; i<4; i++)
-	{
-		args[i] = malloc(100*sizeof(char));
-	}
-	
-	int count = 0;
-
-	token = strtok(inp, ch);
-
-	while( token != NULL && count<4)
-	{
-		args[count++] = token;
-		token = strtok(NULL, ch);	
-	}
-	//
-
 	//check if the command exist in the defined ones
 	//par_ev take
 	//			-1 if command is not defined
 	//			a natural number representing command index position in
 	//				available_commands array
-	int par_ev = check_command(args[0]);	
+	int par_ev = check_command(*args);	
 	//
 
 	//if block to intrerupt current function in case of
@@ -83,8 +63,8 @@ int check_input_validity(char *inp)
 	//check for the number of the given arguments
 	//checked with a list of P.M.F.S(see at the top)
 	//arguments for each existing command
-	int is_full;
-	is_full = is_occupied(args);
+	int is_full = is_occupied(args);
+
 	if (is_full>command_param_check[par_ev][0]) 
 	{
 		printf("Too many arguments\n");
@@ -95,25 +75,21 @@ int check_input_validity(char *inp)
 		printf("Not enough arguments\n");
 		return 0;
 	}
-	else
-	{
-		printf("Good rigth enough parameters\n");
-	}
+	
 	//
-
-	if(command_param_check[par_ev][1] == 1 && !check_ip(args[1])) 
+	if(command_param_check[par_ev][2] == 1 && !check_ip(args[1])) 
 	{
 		printf("Bad IP\n");
 		return 0;
 	}
 
-	if(command_param_check[par_ev][2] == 2 && !check_port(args[2])) 
+	if(command_param_check[par_ev][3] == 2 && !check_port(args[2])) 
 	{
 		printf("Bad PORT\n");
 		return 0;
 	}
 
-	if(command_param_check[par_ev][1] == 3 && !check_local_filename(args[1])) 
+	if(command_param_check[par_ev][2] == 3 && !check_local_filename(args[1])) 
 	{	
 		printf("Filename not exists in current directory\n");
 		return 0;
@@ -189,7 +165,9 @@ int check_ip(char* ip)
 //param_check index 2
 int check_port(char* port)
 {
-	return 0;	
+	int res = conv_to_num(port);
+	if (res<0 || res>65535) return 0;
+	return 1;	
 }
 //
 
@@ -225,6 +203,50 @@ int is_occupied(char *args[])
 int conv_to_num(char* str)
 {
 	//return the converted number
+	//if no more that 5 character lenght
 	//-1 otherwise
-	return -1;
+	if (strlen(str)>5) return 0;
+
+	for (int i=0; i<strlen(str); i++)
+	{
+		if (!isdigit(str[i]))
+		{
+			return -1;
+		}	
+	}
+	return atoi(str);
+}
+
+char**  split_to_array(char* str, const char *ch)
+{
+	char *token;
+	int count=0;
+	char** args;
+	args = (char**)malloc(sizeof(char*)*4);
+
+	for (int i=0; i<4; i++)
+	{
+		*(args+i) = malloc(100*sizeof(char));
+	}
+
+	token = strtok(str, ch);
+	
+		while( token != NULL && count<4)
+		{
+			*(args+count++) = token;
+			token = strtok(NULL, ch);	
+		}
+	return args;
+}
+
+char* get_string(char**args)
+{
+	char* str=malloc(sizeof(char)*1000);
+	int i=0;
+	while(*(args+i)!=NULL)
+	{
+		sprintf(str,"%s %s",str, *args);
+	}
+	sprintf(str, "%s\n",str);
+	return str;
 }

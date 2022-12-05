@@ -1,8 +1,10 @@
 #ifndef FTPCOMMANDS_H
 #define FTPCOMMANDS_H
 
-int ftp_execute(char*);
+void ftp_execute(char**);
 
-char* ftp_response(int);
+int ftp_connect(char**);
+
+char* ftp_response();
 
 #endif
