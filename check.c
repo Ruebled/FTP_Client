@@ -7,59 +7,32 @@
 #include "ftpcommands.h"
 #include "trim.h"
 
-
-
 int check_command(char *com)
 {
-	//call the function name than is the same
-	//as the first word in com
-	
 	char **args = split_to_array(com, " ");
 
 	toUP(*args);
 
-	if (!strcmp(*args, ""))
-	{
-		return 0;	
-	}
-
 	if (!strcmp(*args,"OPEN"))
 	{
-		if(ftp_open(args))
-		{
-			return 1;
-		}
-		return 0;
+		ftp_open(args);
 	}
-	if (!strcmp(*args, "LS"))
+	else if (!strcmp(*args, "LS"))
 	{
-		if(ftp_ls(args))
-		{
-			return 1;
-		}	
-		return 0;
+		ftp_ls(args);
 	}
-	//
-// asdgasdg add functions here	
-	if (!strcmp(*args, "RETR"))
+	else if (!strcmp(*args, "RETR"))
 	{
-		if(ftp_retr(args))
-		{
-			return 1;
-		}
-		return 0;
+		ftp_retr(args);
 	}
-	//
-	if (!strcmp(*args, "QUIT"))
+	else if (!strcmp(*args, "QUIT"))
 	{
-		if(!ftp_quit())
-		{
-			return 0;
-		}
-		return -1;
+		ftp_quit();
 	}
-
-	printf("Unknown command\n");
+	else
+	{
+		printf("Unknown command\n");
+	}
 	return 0;
 }
 //
@@ -84,20 +57,9 @@ int check_ip(char* ip)
 		int num = conv_to_num(args[i]);
 		if (num<0 || num>255) 
 		{
-			//free args array
-			//for (int i=0; i<4; i++)
-			//{
-			//	free((args+i));
-			//}
 			return 0;
 		}
 	}
-	//
-	//free args array
-	//for (int i=0; i<4; i++)
-	//{
-	//	free(args+i);
-	//}
 	return 1;
 }
 //

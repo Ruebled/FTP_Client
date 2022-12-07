@@ -382,6 +382,7 @@ int ftp_retr(char** args)
 //FTP QUIT
 int ftp_quit()
 {
+
 	printf("Quit\n");
 	return -1;
 }
