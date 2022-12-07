@@ -1,13 +1,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
 
 #include "ftp_data.h"
-
-#define message_length 2000
 
 //AF_INET represent address family, mean uses IPv4
 //SOCK_STREAM means connection oriented protocol aka. TCP
@@ -18,78 +15,71 @@
 //define structure for ftp connection needed data
 struct sockaddr_in server;
 
-//variable for returning the function execution response
-static int response;
 
-int create_socket()
+//create socket address for "control" connection 
+int create_cc_socket()
 {
-	int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-	if (socket_desc>0)
+	int cc_socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+	if (cc_socket_desc>0)
 	{
-		change_socket_addr(socket_desc);
-		return socket_desc;
+		set_cc_socket(cc_socket_desc);
+		return cc_socket_desc;
 	}
-	else
-	{
-		return -1;
-	}
+	return -1;
 }
 
+//create socket address for "data" connection
+int create_dc_socket()
+{
+	int dc_socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+	if (dc_socket_desc>0)
+	{
+		set_dc_socket(dc_socket_desc);
+		return dc_socket_desc;
+	}
+	return -1;
+}
+
+//variable for returning the function execution response
+int response;
+
+//Connect to either control or data port
 int server_connect(int socket_desc, char *IP, int PORT)
 {
-	//basic definitions of the server 
 	server.sin_addr.s_addr = inet_addr(IP);
 	server.sin_family = AF_INET; server.sin_port = htons(PORT);
 	
 	response = connect(socket_desc, (struct sockaddr *)&server, sizeof(server));
-	
-	//printf("%d\n", errno);
 
 	return response;
 }
 
-
+//send message to a given socket addr (control/data connection)
 int server_send(int socket_desc, char *message, int message_len)
 {
 	response = send(socket_desc, message, message_len, 0);
 	return response;
 }
 
+#define message_len 2000
 char* server_reply;
-
-char *server_receive()
+//get message from server via control connection
+char *control_receive()
 {
-	server_reply = (char*)malloc(sizeof(char)*2000);
+	server_reply = (char*)malloc(sizeof(char)*message_len);
 
-	int socket_desc = get_socket_addr();
-	recv(socket_desc, server_reply, message_length, 0);
+	recv(get_cc_socket(), server_reply, message_len, 0);
+
 	return server_reply;
 }
 
-///Data socket request
-
-
-char* server_data;
-
-int create_data_socket()
+#define data_len 2000
+//get message from server via data connection
+char *data_receive()
 {
-	int socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-	if (socket_desc>0)
-	{
-		change_socket_addr(socket_desc);
-		return socket_desc;
-	}
-	else
-	{
-		return -1;
-	}
-}
+	server_reply = (char*)malloc(sizeof(char)*data_len);
 
-char *server_data_receive()
-{
-	server_data = (char*)malloc(sizeof(char)*2000);
+	recv(get_dc_socket(), server_reply, data_len, 0);
 
-	int socket_desc = get_data_addr();
-	recv(socket_desc, server_data, message_length, 0);
-	return server_data;
+	return server_reply;
 }

@@ -39,8 +39,23 @@ int check_command(char *com)
 		}	
 		return 0;
 	}
+	//
+// asdgasdg add functions here	
+	if (!strcmp(*args, "RETR"))
+	{
+		if(ftp_retr(args))
+		{
+			return 1;
+		}
+		return 0;
+	}
+	//
 	if (!strcmp(*args, "QUIT"))
 	{
+		if(!ftp_quit())
+		{
+			return 0;
+		}
 		return -1;
 	}
 
@@ -50,55 +65,40 @@ int check_command(char *com)
 //
 
 //
-
 //check for rightness of the ip here for IPv4
 //four integer numbers delimited by a dot
 //each number ranges between [0, 255]
 //param_check index 1
 int check_ip(char* ip)
 {
-	char *temp= malloc(sizeof(char)*20);
-	strcpy(temp, ip);
-	const char *ch = ".";
-	char *token;
-	char* args[4];
-	for (int i=0; i<4; i++)
-	{
-		args[i] = malloc(50*sizeof(char));
-	}
-	
-	int count = 0;
+	char** args;
+	args = split_to_array(ip, ".");
 
-	token = strtok(temp, ch);
+	int sets = is_occupied(args);
 
-	while( token != NULL)
-	{
-		if (count>3)
-		{
-			free(temp);
-			return 0;
-		}
-		strcpy(args[count++], token);
-		token = strtok(NULL, ch);	
-	}
-	free(temp);
-	if (count<4) return 0; 
+	if (sets<4) return 0; 
 
 	//check if is number in range
 	for (int i=0; i<4; i++)
 	{
 		int num = conv_to_num(args[i]);
-		if (num<0 || num>255) return 0;
+		if (num<0 || num>255) 
+		{
+			//free args array
+			//for (int i=0; i<4; i++)
+			//{
+			//	free((args+i));
+			//}
+			return 0;
+		}
 	}
-	return 1;
-
-	
+	//
 	//free args array
-	for (int i=0; i<4; i++)
-	{
-		free(args[i]);
-	}
-	return 0;
+	//for (int i=0; i<4; i++)
+	//{
+	//	free(args+i);
+	//}
+	return 1;
 }
 //
 
@@ -160,13 +160,15 @@ int conv_to_num(char* str)
 	return atoi(str);
 }
 
-char**  split_to_array(char* str, const char *ch)
+char**  split_to_array(char* inputstr, const char *ch)
 {
 	char *token;
 	int count=0;
 	char** args;
 	args = (char**)malloc(sizeof(char*)*4);
-
+	char* str = malloc(sizeof(char)*50);
+	strcpy(str, inputstr);
+	
 	for (int i=0; i<4; i++)
 	{
 		*(args+i) = malloc(100*sizeof(char));
@@ -174,10 +176,11 @@ char**  split_to_array(char* str, const char *ch)
 
 	token = strtok(str, ch);
 	
-		while( token != NULL && count<4)
-		{
-			*(args+count++) = trim(token);
-			token = strtok(NULL, ch);	
-		}
+	while( token != NULL && count<4)
+	{
+		*(args+count++) = trim(token);
+		token = strtok(NULL, ch);	
+	}
+
 	return args;
 }

@@ -3,25 +3,31 @@
 
 struct server_status
 {
-	int is_connected;
-	int socketaddr;
-
-
+	int cc_status;//control connection status(is_connected)
+	int dc_status;//data connection status(is_connected)
+	int control_connection_socket;
+	int data_connection_socket;
+	char* session_ip;
 };
 
 void create_server_status();
+void destroy_server_status();
+int cc_status();
 
-int is_connected();
+void cc_connected();
 
-void toogle_is_connected();
+void cc_disconnected();
 
-int get_socket_addr();
+int dc_status();
 
-void change_socket_addr(int);
+void dc_connected();
 
-void create_server_data();
-
-void change_socket_data_addr(int);
-int get_data_addr();
+void dc_disconnected();
+void set_cc_socket(int sock_addr);
+void set_dc_socket(int sock_addr);
+int get_cc_socket();
+int get_dc_socket();
+char* get_session_ip();
+void set_session_ip(char* IP);
 
 #endif

@@ -16,6 +16,9 @@ int is_occupied(char* []);
 int conv_to_num(char*);
 
 char** split_to_array(char*, const char*);
+//make function to free the array 
+//ftpcommands hadle response 35
+//
 
 //char* get_string(char**args);
 

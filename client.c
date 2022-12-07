@@ -52,9 +52,9 @@ int main(int argc, char *argv[])
 		if(check_command(command)==-1)
 		{
 			break;
-		}
+		}	
 
 	}
-
+	printf("Closing the client...\n");
 	return 0;	
 }
