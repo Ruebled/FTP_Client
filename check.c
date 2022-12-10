@@ -15,7 +15,10 @@ int check_command(char *com)
 
 	if (!strcmp(*args,"OPEN"))
 	{
-		ftp_open(args);
+		if(ftp_open(args))
+		{
+			ftp_syst();
+		}
 	}
 	else if (!strcmp(*args, "LS"))
 	{
@@ -27,11 +30,46 @@ int check_command(char *com)
 	}
 	else if (!strcmp(*args, "QUIT"))
 	{
-		ftp_quit();
+		if(ftp_quit())
+		{
+			return -1;
+		}
+	}
+	else if (!strcmp(*args, "STOR"))
+	{
+		ftp_stor();
+	}
+	else if (!strcmp(*args, "PWD"))
+	{
+		ftp_pwd();
+	}
+	else if (!strcmp(*args, "DELE"))
+	{
+		ftp_dele();
+	}
+	else if (!strcmp(*args, "RMD"))
+	{
+		ftp_rmd();
+	}
+	else if (!strcmp(*args, "CWD"))
+	{
+		ftp_cwd();
+	}
+	else if (!strcmp(*args, "CDUP"))
+	{
+		ftp_cdup();
+	}
+	else if (!strcmp(*args, "MKD"))
+	{
+		ftp_mkd();
+	}
+	else if (!strcmp(*args, "HELP"))
+	{
+		ftp_help();
 	}
 	else
 	{
-		printf("Unknown command\n");
+		printf("Unknown command\nTry HELP\n");
 	}
 	return 0;
 }

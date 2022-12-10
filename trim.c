@@ -11,7 +11,7 @@ char *ltrim(char *s)
 char *rtrim(char *s)
 {
 	char * back = s + strlen(s);
-	while(isspace(*--back));
+	while(isspace(*--back) || !strcmp(back, "\n"));
 	*(back+1) = '\0';
 	return s;
 }

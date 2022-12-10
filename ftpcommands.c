@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h> 
 #include <string.h>
 
 #include "ftp_data.h"
@@ -8,9 +8,9 @@
 #include "ftpcommands.h"
 #include "trim.h"
 
+//Try to connect to a server in control connection
 int establish_control_connection(char* IP, int PORT)
 {
-	
 	if(create_cc_socket()<0)
 	{
 		printf("Couldn't create socket\n");
@@ -30,9 +30,43 @@ int establish_control_connection(char* IP, int PORT)
 		return 0;
 	}
 	return 1;
-
 }
+//Try to connect via data channel
+int establish_data_connection()
+{
+	if(!create_dc_socket())
+	{
+		printf("Can't create data connection socket\nStrange....\n");
+		return 0;
+	}
 
+	if (server_send(get_cc_socket(), "EPSV\n", strlen("EPSV\n"))<0)
+	{
+		printf("Error sending the EPSV command\n");
+		return 0;
+	}
+
+	char* sr;
+	sr = control_receive();
+	printf("%s",sr);
+
+	int data_port = handle_response(sr);
+
+	if (!data_port)
+	{
+		return 0;
+	}
+		
+	if(server_connect(get_dc_socket(), get_session_ip(), data_port)<0)
+	{
+		printf("Couldn't connect to data server\n");
+		return 0;
+	}
+	dc_connected();
+	
+	return 1;
+}
+//Do response action to any reply server code
 int handle_response(char* sr)
 {
 	char** reply = split_to_array(sr, " ");
@@ -84,94 +118,40 @@ int handle_response(char* sr)
 		return 0;
 	}
 
+	if (reply_code == 257)
+	{
+		return 0;//maybe fetch the directory....
+	}
+	if (reply_code == 550)
+	{
+		return 0;
+	}
+	if (reply_code == 250)
+	{
+		return 0;
+	}
+	if (reply_code == 221)
+	{
+		cc_disconnected();
+		return 1;
+	}
+	if (reply_code == 450)
+	{
+		printf("Directory not empty\n");
+		return 0;
+	}
+	if (reply_code == 215)
+	{
+		return 0;
+	}
 	
 	printf("Unknown return code\n");
 	free(reply);
 	return 1;
 }
 
-int fetch_data_port(char* sr)
-{
-	char** args = split_to_array(sr, "(");
-	char** bars_code = split_to_array(*(args+1), "|");
-	
-	int data_code = conv_to_num(*(bars_code));
-	
-	if(data_code)
-	{
-		return data_code;
-	}
-	return 0;
-}
-
-int ftp_user()
-{
-	char* input = (char*)malloc(sizeof(char)*50);
-
-	printf("USER: ");
-	fgets(input, 50, stdin);
-	
-	char* message = (char*)malloc(sizeof(char)*56);
-	sprintf(message, "USER %s", input);	
-
-	free(input);
-
-	if (server_send(get_cc_socket(), message, strlen(message))<0)
-	{
-		printf("Error sending the username\n");
-		return 0;
-	}
-
-	free(message);
-
-	char* sr;
-	sr = control_receive();
-	printf("%s", sr);
-
-	if (handle_response(sr)<0)
-	{
-		free(sr);
-		return 0;
-	}
-	free(sr);
-	return 1;
-}
-
-int ftp_passwd()
-{
-	char* input = (char*)malloc(sizeof(char)*50);
-	
-	printf("PASS: ");
-	fgets(input, 50, stdin);
-	
-	char* message = (char*)malloc(sizeof(char)*56);
-	sprintf(message, "PASS %s", input);	
-
-	free(input);
-
-	if (server_send(get_cc_socket(), message, strlen(message))<0)
-	{
-		printf("Error sending the password\n");
-		return 0;
-	}
-
-	free(message);
-
-	char *sr;
-	sr = control_receive();
-	printf("%s", sr);
-	if(handle_response(sr)<0)
-	{
-		free(sr);
-		return 0;
-	}
-	free(sr);
-	return 1;
-}
-
 //FTP OPEN
 int ftp_open(char **args) {
-	
 	if(!cc_status())
 	{
 		int num_param = is_occupied(args+1);
@@ -226,7 +206,7 @@ int ftp_open(char **args) {
 				return 0;
 			}
 			set_session_ip(*(args+1));
-						
+			return 1;						
 		}
 
 		if (num_param == 0)
@@ -247,42 +227,73 @@ int ftp_open(char **args) {
 	return 1;
 }
 
-int establish_data_connection()
+//FTP USER ->Get a from username from stdin, and send via control channel
+int ftp_user()
 {
-	if(!create_dc_socket())
+	char* input = (char*)malloc(sizeof(char)*50);
+
+	printf("USER: ");
+	fgets(input, 50, stdin);
+	
+	char* message = (char*)malloc(sizeof(char)*56);
+	sprintf(message, "USER %s", input);	
+
+	free(input);
+
+	if (server_send(get_cc_socket(), message, strlen(message))<0)
 	{
-		printf("Can't create data connection socket\nStrange....\n");
+		printf("Error sending the username\n");
 		return 0;
 	}
 
-	if (server_send(get_cc_socket(), "EPSV\n", strlen("EPSV\n"))<0)
-	{
-		printf("Error sending the EPSV command\n");
-		return 0;
-	}
+	free(message);
 
 	char* sr;
 	sr = control_receive();
-	printf("%s",sr);
+	printf("%s", sr);
 
-	int data_port = handle_response(sr);
-
-	if (!data_port)
+	if (handle_response(sr)<0)
 	{
+		free(sr);
 		return 0;
 	}
-		
-	if(server_connect(get_dc_socket(), get_session_ip(), data_port)<0)
-	{
-		printf("Couldn't connect to data server\n");
-		return 0;
-	}
-	dc_connected();
+	free(sr);
+	return 1;
+}
+//FTP PASS ->Get a from password from stdin, and send via control channel
+int ftp_passwd()
+{
+	char* input = (char*)malloc(sizeof(char)*50);
 	
+	printf("PASS: ");
+	fgets(input, 50, stdin);
+	
+	char* message = (char*)malloc(sizeof(char)*56);
+	sprintf(message, "PASS %s", input);	
+
+	free(input);
+
+	if (server_send(get_cc_socket(), message, strlen(message))<0)
+	{
+		printf("Error sending the password\n");
+		return 0;
+	}
+
+	free(message);
+
+	char *sr;
+	sr = control_receive();
+	printf("%s", sr);
+	if(handle_response(sr)<0)
+	{
+		free(sr);
+		return 0;
+	}
+	free(sr);
 	return 1;
 }
 //FTP LS
-int ftp_ls(char** args)
+int ftp_ls()
 {
 	if(cc_status())
 	{
@@ -305,9 +316,12 @@ int ftp_ls(char** args)
 		{
 			return 0;
 		}
-
-		sr = data_receive();
-		printf("%s",sr);
+		char *data;
+		do
+		{
+			data = data_receive();
+			printf("%s",data);
+		}while(strcmp(data+strlen(data)-1, ""));
 		
 		sr = control_receive();
 		printf("%s",sr);
@@ -316,16 +330,38 @@ int ftp_ls(char** args)
 		{
 			return 0;
 		}
+		return 1;
+	}
+	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+	return 0;
+}
+//FTP SYST
+int ftp_syst()
+{
+	if(cc_status())
+	{
+		if (server_send(get_cc_socket(), "SYST\n", strlen("SYST\n"))<0)
+		{
+			printf("Error sending the SYST command\n");
+			return 0;
+		}
 
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			free(sr);
+			return 0;
+		}
 		free(sr);
 		return 1;
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
 	return 0;
 }
-
 //FTP RETR
-int ftp_retr(char** args)
+int ftp_retr()
 {
 	if(cc_status())
 	{
@@ -336,25 +372,32 @@ int ftp_retr(char** args)
 		}
 		
 		char *string = (char*)malloc(sizeof(char)*50);
-		fgets(string, 50, stdin);
-		sprintf(string, "RETR %s", string);
-
-		if (server_send(get_cc_socket(), string, strlen(string))<0)
+		char *message = (char*)malloc(sizeof(char)*50);
+		while(!strcmp(string, ""))
 		{
-			printf("Error sending the LS command\n");
+			printf(": ");
+			fgets(string, 50, stdin);
+			trim(string);
+		}
+		sprintf(message, "RETR %s\n", string);
+		if (server_send(get_cc_socket(), message, strlen(message))<0)
+		{
+			printf("Error sending the RETR command\n");
 			return 0;
 		}
+		free(message);
 
 		char* sr;
 		sr = control_receive();
 		printf("%s",sr);
 		if(!handle_response(sr))
 		{
+			free(sr);
 			return 0;
 		}
 
 		FILE * file;
-		file = fopen("logs", "w");	
+		file = fopen(string, "w");	
 		do
 		{
 			sr = data_receive();
@@ -368,6 +411,7 @@ int ftp_retr(char** args)
 
 		if(!handle_response(sr))
 		{
+			free(sr);
 			return 0;
 		}
 
@@ -378,29 +422,327 @@ int ftp_retr(char** args)
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
 	return 0;
 }
+int ftp_cwd()
+{
+	if(cc_status())
+	{	
+		char *string = (char*)malloc(sizeof(char)*50);
+		char *message = (char*)malloc(sizeof(char)*50);
+		while(!strcmp(string, ""))
+		{
+			printf(": ");
+			fgets(string, 50, stdin);
+			trim(string);
+		}
+		sprintf(message, "CWD %s\n", string);
+		free(string);
+		//delete
 
+		if (server_send(get_cc_socket(), message, strlen(message))<0)
+		{
+			printf("Error sending the CWD command\n");
+			return 0;
+		}
+		free(message);
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			free(sr);
+			return 0;
+		}
+
+		free(sr);
+		return 1;
+	}
+	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+	return 0;
+}
+//FTP CDUP (Change directory up)
+int ftp_cdup()
+{
+	if(cc_status())
+	{	
+		if (server_send(get_cc_socket(), "CDUP\n", strlen("CDUP\n"))<0)
+		{
+			printf("Error sending the CDUP command\n");
+			return 0;
+		}
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			return 0;
+		}
+
+		return 1;
+	}
+	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+	return 0;
+}
+//FTP PWD(print working directory)
+int ftp_pwd()
+{
+	if(cc_status())
+	{	
+		if (server_send(get_cc_socket(), "PWD\n", strlen("PWD\n"))<0)
+		{
+			printf("Error sending the PWD command\n");
+			return 0;
+		}
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			return 0;
+		}
+
+		free(sr);
+		return 1;
+	}
+	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+	return 0;
+}
+//FTP MKD
+int ftp_mkd()
+{
+	if(cc_status())
+	{	
+		char *string = (char*)malloc(sizeof(char)*50);
+		char *message = (char*)malloc(sizeof(char)*50);
+		while(!strcmp(string, ""))
+		{
+			printf(": ");
+			fgets(string, 50, stdin);
+			trim(string);
+		}
+		sprintf(message, "MKD %s\n", string);
+		free(string);
+
+		if (server_send(get_cc_socket(), message, strlen(message))<0)
+		{
+			printf("error sending the mkd command\n");
+			return 0;
+		}
+		free(message);
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			free(sr);
+			return 0;
+		}
+
+		free(sr);
+		return 1;
+	}
+	printf("not connected to any server\ntry open [ip[port]]\n");
+	return 0;
+}
+//FTP RMD(Remove directory)
+int ftp_rmd()
+{
+	if(cc_status())
+	{	
+		char *string = (char*)malloc(sizeof(char)*50);
+		char *message = (char*)malloc(sizeof(char)*50);
+		while(!strcmp(string, ""))
+		{
+			printf(": ");
+			fgets(string, 50, stdin);
+			trim(string);
+		}
+		sprintf(message, "RMD %s\n", string);
+		free(string);
+
+		if (server_send(get_cc_socket(), message, strlen(message))<0)
+		{
+			printf("Error sending the RMD command\n");
+			return 0;
+		}
+		free(message);
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			free(sr);
+			return 0;
+		}
+
+		free(sr);
+		return 1;
+	}
+	printf("Not connected to any server\nTry open [Ip[Port]]\n");
+	return 0;
+}
+//FTP DELE(DELETE a file)
+int ftp_dele()
+{
+	if(cc_status())
+	{	
+		char *string = (char*)malloc(sizeof(char)*50);
+		char *message = (char*)malloc(sizeof(char)*50);
+		while(!strcmp(string, ""))
+		{
+			printf(": ");
+			fgets(string, 50, stdin);
+			trim(string);
+		}
+		sprintf(message, "DELE %s\n", string);
+		free(string);
+		if (server_send(get_cc_socket(), message, strlen(message))<0)
+		{
+			printf("Error sending the DELE command\n");
+			return 0;
+		}
+		free(message);
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			free(sr);
+			return 0;
+		}
+
+		free(sr);
+		return 1;
+	}
+	printf("Not connected to any server\nTry open [Ip[Port]]\n");
+	return 0;
+}
+//FTP STOR
+int ftp_stor()
+{
+	if(cc_status())
+	{
+		if(!establish_data_connection())
+		{
+			printf("Couldn't establish data connection\n");
+			return 0;
+		}
+		
+		char *string = (char*)malloc(sizeof(char)*50);
+		char *message = (char*)malloc(sizeof(char)*50);
+		while(!strcmp(string, ""))
+		{
+			printf(": ");
+			fgets(string, 50, stdin);
+			trim(string);
+		}
+		sprintf(message, "STOR %s\n", string);
+		if (server_send(get_cc_socket(), message, strlen(message))<0)
+		{
+			printf("Error sending the STOR command\n");
+			return 0;
+		}
+		free(message);
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			free(sr);
+			return 0;
+		}
+
+		FILE * file;
+		file = fopen(string, "r");	
+		char* data = (char*)malloc(sizeof(char)*2000);
+		do
+		{
+			fgets(data, 2000, file);
+			server_send(get_dc_socket(),data, strlen(data));
+		}while(strcmp((data+strlen(data)-1), ""));
+
+		fclose(file);
+
+		sr = control_receive();
+		printf("%s\n",sr);
+
+		if(!handle_response(sr))
+		{
+			free(sr);
+			return 0;
+		}
+
+		
+		free(sr);
+		return 1;
+	}
+	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+	return 0;
+}
 //FTP QUIT
 int ftp_quit()
 {
+	if(cc_status())
+	{	
+		if (server_send(get_cc_socket(), "QUIT\n", strlen("QUIT\n"))<0)
+		{
+			printf("Error sending the QUIT command\n");
+			return 0;
+		}
 
-	printf("Quit\n");
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			return 0;
+		}
+		return -1;
+	}
 	return -1;
 }
+
+
+//FTP HELP
+int ftp_help()
+{
+	printf("something\n");
+	///complete....
+	return 0;
+}
+
+//Parse data port from EPSV reply
+int fetch_data_port(char* sr)
+{
+	char** args = split_to_array(sr, "(");
+	char** bars_code = split_to_array(*(args+1), "|");
+	
+	int data_code = conv_to_num(*(bars_code));
+	
+	if(data_code)
+	{
+		return data_code;
+	}
+	return 0;
+}
 //The following are the FTP commands:
+//which ain't implemented
+//
 //
 //            ACCT <SP> <account-information> <CRLF>
-//            CWD  <SP> <pathname> <CRLF>
-//            CDUP <CRLF>
 //            SMNT <SP> <pathname> <CRLF>
-//            QUIT <CRLF>
 //            REIN <CRLF>
 //            PORT <SP> <host-port> <CRLF>
 //            PASV <CRLF>
 //            TYPE <SP> <type-code> <CRLF>
 //            STRU <SP> <structure-code> <CRLF>
 //            MODE <SP> <mode-code> <CRLF>
-//            RETR <SP> <pathname> <CRLF>
-//            STOR <SP> <pathname> <CRLF>
 //            STOU <CRLF>
 //            APPE <SP> <pathname> <CRLF>
 //            ALLO <SP> <decimal-integer>
@@ -409,13 +751,8 @@ int ftp_quit()
 //            RNFR <SP> <pathname> <CRLF>
 //            RNTO <SP> <pathname> <CRLF>
 //            ABOR <CRLF>
-//            DELE <SP> <pathname> <CRLF>
-//            RMD  <SP> <pathname> <CRLF>
-//            MKD  <SP> <pathname> <CRLF>
-//            PWD  <CRLF>
 //            NLST [<SP> <pathname>] <CRLF>
 //            SITE <SP> <string> <CRLF>
-//            SYST <CRLF>
 //            STAT [<SP> <pathname>] <CRLF>
 //            HELP [<SP> <string>] <CRLF>
 //            noop <crlf>
