@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> 
 #include <ctype.h>
 
 #include "check.h"
@@ -19,15 +19,14 @@ int check_command(char *com)
 		{
 			ftp_syst();
 		}
-		destroy(args);
 	}
 	else if (!strcmp(*args, "LS"))
 	{
-		ftp_ls(args);
+		ftp_ls(*(args+1));
 	}
 	else if (!strcmp(*args, "RETR"))
 	{
-		ftp_retr(args);
+		ftp_retr(*(args+1));
 	}
 	else if (!strcmp(*args, "QUIT"))
 	{
@@ -39,7 +38,7 @@ int check_command(char *com)
 	}
 	else if (!strcmp(*args, "STOR"))
 	{
-		ftp_stor();
+		ftp_stor(*(args+1));
 	}
 	else if (!strcmp(*args, "PWD"))
 	{
@@ -47,15 +46,15 @@ int check_command(char *com)
 	}
 	else if (!strcmp(*args, "DELE"))
 	{
-		ftp_dele();
+		ftp_dele(*(args+1));
 	}
 	else if (!strcmp(*args, "RMD"))
 	{
-		ftp_rmd();
+		ftp_rmd(*(args+1));
 	}
 	else if (!strcmp(*args, "CWD"))
 	{
-		ftp_cwd();
+		ftp_cwd(*(args+1));
 	}
 	else if (!strcmp(*args, "CDUP"))
 	{
@@ -63,7 +62,7 @@ int check_command(char *com)
 	}
 	else if (!strcmp(*args, "MKD"))
 	{
-		ftp_mkd();
+		ftp_mkd(*(args+1));
 	}
 	else if (!strcmp(*args, "HELP"))
 	{
@@ -173,6 +172,7 @@ char**  split_to_array(char* inputstr, const char *ch)
 	for(size_t i=0; i<4; i++)
 	{
 		*(args+i) = (char*)malloc(sizeof(char)*100);
+		strcpy(*(args+i), "");
 	}
 
 	int count=0;

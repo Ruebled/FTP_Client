@@ -4,6 +4,9 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#include <stdio.h>
+#include <string.h>
+
 #include "ftp_data.h"
 
 //AF_INET represent address family, mean uses IPv4
@@ -61,25 +64,22 @@ int server_send(int socket_desc, char *message, int message_len)
 	return response;
 }
 
-#define message_len 2000
-char* server_reply;
+
 //get message from server via control connection
 char *control_receive()
 {
-	server_reply = (char*)malloc(sizeof(char)*message_len);
-
-	recv(get_cc_socket(), server_reply, message_len, 0);
+	char* server_reply = (char*)malloc(sizeof(char)*1000);
+	recv(get_cc_socket(), server_reply, 1000, 0);
 
 	return server_reply;
 }
 
-#define data_len 2000
+#define data_len 8
 //get message from server via data connection
 char *data_receive()
 {
-	server_reply = (char*)malloc(sizeof(char)*data_len);
+	char *server_data = (char*)malloc(data_len);
+	recv(get_dc_socket(), server_data, data_len, 0);
 
-	recv(get_dc_socket(), server_reply, data_len, 0);
-
-	return server_reply;
+	return server_data;
 }
