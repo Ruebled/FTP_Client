@@ -15,17 +15,18 @@ void create_server_status()
 	status->dc_status = 0;
 	status->control_connection_socket = -1;
 	status->data_connection_socket = -1;
-	//status->session_ip = "0.0.0.0";
+	status->session_ip = (char*)malloc(sizeof(char)*100);
 }
 
-void destroy_server_status(){
+void destroy_server_status()
+{
+	free(status->session_ip);
 	free(status);
 }
 
 //set session ip
 void set_session_ip(char* IP)
 {
-	status->session_ip = (char*)malloc(sizeof(char)*strlen(IP));
 	strcpy(status->session_ip, IP);
 }
 

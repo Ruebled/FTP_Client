@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
 		}	
 
 	}
+	destroy_server_status();
+	free(command);
 	printf("Closing the client...\n");
 	return 0;	
 }

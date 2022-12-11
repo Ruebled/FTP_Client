@@ -73,7 +73,7 @@ int handle_response(char* sr)
 
 	int reply_code = conv_to_num(*reply);
 
-	
+	destroy(reply);	
 	if (reply_code == 220)
 	{
 		if(ftp_user()<0)
@@ -145,8 +145,8 @@ int handle_response(char* sr)
 		return 0;
 	}
 	
-	printf("Unknown return code\n");
-	free(reply);
+	printf("Unknown return code %d\n", reply_code);
+	//free(reply);
 	return 1;
 }
 
@@ -154,9 +154,9 @@ int handle_response(char* sr)
 int ftp_open(char **args) {
 	if(!cc_status())
 	{
-		int num_param = is_occupied(args+1);
+		int num_param = is_occupied(args);
 
-		if (num_param == 1)
+		if (--num_param == 1)
 		{
 			if(!check_ip(*(args+1)))
 			{
@@ -645,6 +645,7 @@ int ftp_stor()
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the STOR command\n");
+			free(string);
 			return 0;
 		}
 		free(message);
@@ -655,11 +656,13 @@ int ftp_stor()
 		if(!handle_response(sr))
 		{
 			free(sr);
+			free(string);
 			return 0;
 		}
 
 		FILE * file;
 		file = fopen(string, "r");	
+		free(string);
 		char* data = (char*)malloc(sizeof(char)*2000);
 		do
 		{
@@ -712,8 +715,44 @@ int ftp_quit()
 //FTP HELP
 int ftp_help()
 {
-	printf("something\n");
-	///complete....
+	if(cc_status())
+	{
+		if(!establish_data_connection())
+		{
+			printf("Couldn't establish data connection\n");
+			return 0;
+		}
+
+		if (server_send(get_cc_socket(), "HELP\n", strlen("HELP\n"))<0)
+		{
+			printf("Error sending the HELP command\n");
+			return 0;
+		}
+
+		char* sr;
+		sr = control_receive();
+		printf("%s",sr);
+		if(!handle_response(sr))
+		{
+			return 0;
+		}
+		char *data;
+		do
+		{
+			data = data_receive();
+			printf("%s",data);
+		}while(strcmp(data+strlen(data)-1, ""));
+		
+		//sr = control_receive();
+		//printf("%s",sr);
+		//
+		//if(!handle_response(sr))
+		//{
+		//	return 0;
+		//}
+		return 1;
+	}
+	printf("open [IP [PORT]]\n-> supports only IPv4\nQuit => close the client\n");
 	return 0;
 }
 

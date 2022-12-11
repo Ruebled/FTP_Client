@@ -19,6 +19,7 @@ int check_command(char *com)
 		{
 			ftp_syst();
 		}
+		destroy(args);
 	}
 	else if (!strcmp(*args, "LS"))
 	{
@@ -30,8 +31,9 @@ int check_command(char *com)
 	}
 	else if (!strcmp(*args, "QUIT"))
 	{
-		if(ftp_quit())
+		if(ftp_quit()<0)
 		{
+			destroy(args);
 			return -1;
 		}
 	}
@@ -71,6 +73,7 @@ int check_command(char *com)
 	{
 		printf("Unknown command\nTry HELP\n");
 	}
+	destroy(args);
 	return 0;
 }
 //
@@ -162,25 +165,37 @@ int conv_to_num(char* str)
 
 char**  split_to_array(char* inputstr, const char *ch)
 {
-	char *token;
-	int count=0;
-	char** args;
-	args = (char**)malloc(sizeof(char*)*4);
-	char* str = malloc(sizeof(char)*50);
+	int input_len = strlen(inputstr);
+	char* str = malloc(sizeof(char)*(input_len+1));
 	strcpy(str, inputstr);
 	
-	for (int i=0; i<4; i++)
+	char** args = (char**)malloc(sizeof(char*)*4);
+	for(size_t i=0; i<4; i++)
 	{
-		*(args+i) = malloc(100*sizeof(char));
+		*(args+i) = (char*)malloc(sizeof(char)*100);
 	}
 
-	token = strtok(str, ch);
+	int count=0;
+	char* token = strtok(str, ch);
 	
 	while( token != NULL && count<4)
 	{
-		*(args+count++) = trim(token);
+		trim(token);
+
+		strcpy(*(args+count++), token);
+
 		token = strtok(NULL, ch);	
 	}
+	free(str);
 
 	return args;
+}
+
+void destroy(char** reply)
+{
+	for (int i = 0; i<4; i++)
+	{
+		free(*(reply+i));
+	}
+	free(reply);
 }

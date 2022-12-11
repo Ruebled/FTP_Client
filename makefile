@@ -5,7 +5,7 @@ SOURCES = client.c check.c ftpcommands.c ftp_data.c socketfunc.c trim.c
 EXE = client
 #
 # # Flags for compilation (adding warnings are always good)
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -ggdb3
 
 #
 # # Flags for linking (none for the moment)
