@@ -12,6 +12,10 @@ int check_command(char *com)
 	char **args = split_to_array(com, " ");
 
 	toUP(*args);
+	if (!strcmp(*args, "TEST"))
+	{
+		ftp_test();
+	}
 
 	if (!strcmp(*args,"OPEN"))
 	{

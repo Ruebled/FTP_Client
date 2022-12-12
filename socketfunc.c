@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -56,6 +57,14 @@ int server_connect(int socket_desc, char *IP, int PORT)
 
 	return response;
 }
+int server_disconnect(int socket_desc)
+{
+	if(close(socket_desc)>-1)
+	{
+		dc_disconnected();
+	}
+	return 0;
+}
 
 //send message to a given socket addr (control/data connection)
 int server_send(int socket_desc, char *message, int message_len)
@@ -64,6 +73,11 @@ int server_send(int socket_desc, char *message, int message_len)
 	return response;
 }
 
+int data_send(int socket_desc, unsigned char *message, int message_len)
+{
+	response = send(socket_desc, message, message_len, 0);
+	return response;
+}
 
 //get message from server via control connection
 char *control_receive()
@@ -74,12 +88,14 @@ char *control_receive()
 	return server_reply;
 }
 
-#define data_len 8
 //get message from server via data connection
-char *data_receive()
+unsigned char *data_receive(int len)
 {
-	char *server_data = (char*)malloc(data_len);
-	recv(get_dc_socket(), server_data, data_len, 0);
+	unsigned char *server_data = (unsigned char*)malloc(1);
+	if((recv(get_dc_socket(), server_data, 1, 0)<1))
+	{
+		dc_disconnected();
+	}
 
 	return server_data;
 }

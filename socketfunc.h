@@ -8,10 +8,13 @@ int create_dc_socket();
 
 int server_connect(int, char*, int);
 
+int server_disconnect(int);
+
 int server_send(int, char*, int);
+int data_send(int, unsigned char*, int);
 
 char* control_receive();
 
-char* data_receive();
+unsigned char* data_receive();
 
 #endif

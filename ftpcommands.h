@@ -28,4 +28,6 @@ int ftp_help();
 
 int get_server_reply();
 
+int ftp_test();
+
 #endif
