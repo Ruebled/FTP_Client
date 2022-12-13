@@ -44,18 +44,13 @@ int create_dc_socket()
 	return -1;
 }
 
-//variable for returning the function execution response
-int response;
-
 //Connect to either control or data port
 int server_connect(int socket_desc, char *IP, int PORT)
 {
 	server.sin_addr.s_addr = inet_addr(IP);
 	server.sin_family = AF_INET; server.sin_port = htons(PORT);
 	
-	response = connect(socket_desc, (struct sockaddr *)&server, sizeof(server));
-
-	return response;
+	return connect(socket_desc, (struct sockaddr *)&server, sizeof(server));
 }
 int server_disconnect(int socket_desc)
 {
@@ -69,20 +64,19 @@ int server_disconnect(int socket_desc)
 //send message to a given socket addr (control/data connection)
 int server_send(int socket_desc, char *message, int message_len)
 {
-	response = send(socket_desc, message, message_len, 0);
-	return response;
+	return send(socket_desc, message, message_len, 0);
 }
 
 int data_send(int socket_desc, unsigned char *message, int message_len)
 {
-	response = send(socket_desc, message, message_len, 0);
-	return response;
+	return send(socket_desc, message, message_len, 0);
 }
 
 //get message from server via control connection
 char *control_receive()
 {
 	char* server_reply = (char*)malloc(sizeof(char)*1000);
+
 	recv(get_cc_socket(), server_reply, 1000, 0);
 
 	return server_reply;

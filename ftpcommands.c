@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h> 
 #include <string.h>
+#include <time.h>
 
 #include "ftp_data.h"
 #include "socketfunc.h"
@@ -14,14 +15,14 @@ int establish_control_connection(char* IP, int PORT)
 	if(create_cc_socket()<0)
 	{
 		printf("Couldn't create socket\n");
-		return 0;
+		return -1;
 	}			
 	if(server_connect(get_cc_socket(), IP, PORT)<0)
 	{
 		printf("Couln't connect to the server\n");
-		return 0;
+		return -1;
 	}
-
+	cc_connected();
 	return get_server_reply();
 }
 
@@ -31,7 +32,10 @@ int get_server_reply()
 	sr = control_receive();
 	printf("%s",sr);
 
-	return handle_response(sr);
+	int res = handle_response(sr);
+
+	free(sr);
+	return res;
 }
 //Try to connect via data channel
 int establish_data_connection()
@@ -64,6 +68,7 @@ int establish_data_connection()
 	
 	return 1;
 }
+
 //Do response action to any reply server code
 int handle_response(char* sr)
 {
@@ -71,91 +76,41 @@ int handle_response(char* sr)
 
 	int reply_code = conv_to_num(*reply);
 
-	if (reply_code == 229)
+	switch(reply_code)
 	{
-		return fetch_data_port(sr);
-	}
-	if (reply_code == 220)
-	{
-		if(ftp_user()<0)
-		{
+		case 257:
+		case 550:
+		case 250:
+		case 200:
+		case 450:
+		case 215:
+		case 502:
+		case 221:
+		case 226:
+		case 150:
 			return 0;
-		}
-		return 1;		
-	}
 
-	if (reply_code == 331)
-	{
-		if(ftp_passwd()<0)
-		{
+		case 220:
+			return ftp_user();
+
+		case 229:
+			return fetch_data_port(sr);
+
+		case 331:
+			return ftp_passwd();
+
+		case 230:
+			printf("Connected to the server\n");
 			return 0;
-		}
-		return 1;
-	}
 
-	if (reply_code == 230)
-	{
-		cc_connected();
-		printf("Connected to the server\n");
-		return 0;
-		//function to give the server system info
-	}
-	
+		case 332:
+			printf("ACCT info required\nNot yet created the function\n");
+			return 0;
 
-	if (reply_code == 150)
-	{
-		dc_connected();
-
-		return 1;
+		default:
+			printf("Unknown return code %d\n", reply_code);
+			return 0;
 	}
-	
-	if (reply_code == 226)
-	{
-		dc_disconnected();
-		return 0;
-	}
-
-	if (reply_code == 257)
-	{
-		return 0;//maybe fetch the directory....
-	}
-	if (reply_code == 550)
-	{
-		return 0;
-	}
-	if (reply_code == 250)
-	{
-		return 0;
-	}
-	if (reply_code == 221)
-	{
-		cc_disconnected();
-		return 1;
-	}
-	if (reply_code == 450)
-	{
-		return 0;
-	}
-	if (reply_code == 215)
-	{
-		return 0;
-	}
-	if (reply_code == 502)
-	{
-		return 0;
-	}
-	if (reply_code == 226)
-	{
-		return 0;
-	}
-	if (reply_code == 332)
-	{
-		printf("ACCT info required\nNot yet created the function\n");
-		return 0;
-	}
-	
-	printf("Unknown return code %d\n", reply_code);
-	return 1;
 }
 
 //FTP OPEN
@@ -282,7 +237,6 @@ int ftp_ls(char*dir)
 		}
 		free(string);
 
-		
 		if(!get_server_reply()) return 0;
 
 		char *data;
@@ -545,32 +499,60 @@ int ftp_stor(char* file)
 		}
 		free(message);
 
-		if(!get_server_reply())
+		if(get_server_reply())
 		{
 			return 0;
 		}
 
 		///	
 		FILE *ptr;
-		ptr = fopen(file, "rb");
-		unsigned char* data = (unsigned char*)malloc(sizeof(unsigned char));
-		int dc_socket = get_dc_socket();
-		int size = sizeof(unsigned char);
 
+		unsigned int dc_socket;
+		unsigned int size;
+		unsigned char* data;
+
+		size_t bytes;
+		clock_t start, end;
+
+		double cpu_time_used;
+		double speed;
+
+		ptr = fopen(file, "rb");
+		if (ptr == NULL)
+		{
+			printf("Fisier neexistent\n");
+			return 0;
+		}
+
+		dc_socket = get_dc_socket();
+		size = sizeof(unsigned char);
+		data = (unsigned char*)malloc(sizeof(unsigned char));
+
+		bytes = 0;
+		start = clock();
 		do
 		{
 			if(fread(data, size, 1, ptr)-1)
 			{
-				server_disconnect(get_dc_socket());
+				end = clock();
 				break;
 			}
 			data_send(dc_socket, data, size);
+			bytes++;
 		}while(1);
+
+		server_disconnect(dc_socket);
 
 		fclose(ptr);
 		free(data);
 
 		get_server_reply();
+
+		cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;	
+		speed = (bytes/cpu_time_used)/1000;
+
+		printf("%lu bytes sent in %lf seconds (%lf bytes/sec)\n", bytes, cpu_time_used, speed);
+
 		return 0;
 		///
 
@@ -597,6 +579,7 @@ int ftp_quit()
 		{
 			return 0;
 		}
+		cc_disconnected();
 		return -1;
 	}
 	return -1;
@@ -675,5 +658,4 @@ int fetch_data_port(char* sr)
 //            NLST [<SP> <pathname>] <CRLF>
 //            SITE <SP> <string> <CRLF>
 //            STAT [<SP> <pathname>] <CRLF>
-//            HELP [<SP> <string>] <CRLF>
 //            noop <crlf>

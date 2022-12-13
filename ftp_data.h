@@ -21,13 +21,15 @@ void cc_disconnected();
 int dc_status();
 
 void dc_connected();
-
 void dc_disconnected();
+
 void set_cc_socket(int sock_addr);
-void set_dc_socket(int sock_addr);
 int get_cc_socket();
+
+void set_dc_socket(int sock_addr);
 int get_dc_socket();
-char* get_session_ip();
+
 void set_session_ip(char* IP);
+char* get_session_ip();
 
 #endif

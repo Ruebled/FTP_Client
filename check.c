@@ -118,17 +118,6 @@ int check_port(char* port)
 	if (res<0 || res>65535) return 0;
 	return res;	
 }
-//
-
-//Get the list of the files in local current working directory
-//compare with the one given as the command parameter
-//param_check index 3
-int check_local_filename(char* filename)
-{
-	return 0;
-}
-//
-
 
 //some tools function maybe move in 
 //different files latter
