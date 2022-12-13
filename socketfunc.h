@@ -15,6 +15,6 @@ int data_send(int, unsigned char*, int);
 
 char* control_receive();
 
-unsigned char* data_receive();
+char* data_receive();
 
 #endif

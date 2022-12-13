@@ -148,6 +148,11 @@ int handle_response(char* sr)
 	{
 		return 0;
 	}
+	if (reply_code == 332)
+	{
+		printf("ACCT info required\nNot yet created the function\n");
+		return 0;
+	}
 	
 	printf("Unknown return code %d\n", reply_code);
 	return 1;
@@ -158,71 +163,43 @@ int ftp_open(char **args)
 {
 	if(!cc_status())
 	{
-		int num_param = is_occupied(args+1);
-		if (num_param == 1)
+		int port_valid = 21;
+
+		if (strcmp(*(args+1), ""))
 		{
 			if(!check_ip(*(args+1)))
 			{
 				printf("Bad IP format\n");
 				return 0;
 			}
-
-			char *str = (char*)malloc(sizeof(char)*50);
-			printf("+-Give the port number\n|\n+-> ");
-			fgets(str, 50, stdin);
-			trim(str);
-
-			int port = check_port(str);
-			free(str);
-
-			if(!port)
-			{
-				printf("Bad PORT format\nTry a number between 0 and 2^16\n");
-				return 0;
-			}
-
-			if (establish_control_connection(*(args+1), port)<0)
-			{
-				return 0;
-			}
-			set_session_ip(*(args+1));
-			return 1;
+		}
+		else
+		{
+			printf("Too few parameters\nTry help\n");
+			return 0;
 		}
 		
-		if (num_param == 2)
+		if (strcmp(*(args+2), ""))
 		{
-			int ip_valid = check_ip(*(args+1));
-			int port_valid = check_port(*(args+2));
-			if(!ip_valid)
+			if(!check_port(*(args+2)))
 			{
-				printf("Bad IP format\n");
-				return 0;
+				printf("Bad PORT format\n");
 			}
-			if (!port_valid)
-			{
-				printf("Bad PORT format\nTry a number between 0 and 2^16\n");
-				return 0;
-			}
-
-			if(!establish_control_connection(*(args+1), port_valid))
-			{
-				return 0;
-			}
-			set_session_ip(*(args+1));
-			return 1;						
+			port_valid = atoi(*(args+2));
 		}
-
-		if (num_param == 0)
+		
+		if (strcmp(*(args+3), ""))
 		{
-			printf("Not enought parameters\n OPEN [IP [PORT]]\n");
+			printf("Too many parameters\n");
 			return 0;
 		}
-
-		if (num_param > 2)
+		
+		if(establish_control_connection(*(args+1), port_valid)<0)
 		{
-			printf("Too many parameters\n OPEN [IP [PORT]]\n");
 			return 0;
 		}
+		set_session_ip(*(args+1));
+		return 1;						
 	}
 	printf("Already connected to a server\n");
 
@@ -303,19 +280,16 @@ int ftp_ls(char*dir)
 			printf("Error sending the LS command\n");
 			return 0;
 		}
+		free(string);
 
 		
-		if(!get_server_reply())
-		{
-			return 0;
-		}
+		if(!get_server_reply()) return 0;
 
-		unsigned char *data;
+		char *data;
 		do
 		{
 			data = data_receive();
 			
-
 		}while(strcmp(data, ""));
 		
 		return get_server_reply();
@@ -377,7 +351,7 @@ int ftp_retr(char* dir)
 			return 0;	
 		}
 		
-		unsigned char *data;
+		char *data;
 
 		FILE * file;
 		file = fopen(string, "wb");	
@@ -400,15 +374,8 @@ int ftp_cwd(char* dir)
 {
 	if(cc_status())
 	{	
-		char *string = (char*)malloc(sizeof(char)*50);
-		strcpy(string, dir);
-
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "CWD %s\n", string);
-		printf("%s", message);
-
-		free(string);
-		//delete
+		sprintf(message, "CWD %s\n", dir);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -446,48 +413,15 @@ int ftp_test()
 	return 0;
 
 }
-int ftp_stru(int opt)
+int ftp_type()
 {
 	if(cc_status())
 	{	
-		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "TYPE A N\n");
-		printf("%s", message);
-
-		//delete
-
-		if (server_send(get_cc_socket(), message, strlen(message))<0)
+		if (server_send(get_cc_socket(), "TYPE I N\n", 9)<0)
 		{
-			printf("Error sending the CWD command\n");
-			free(message);
+			printf("Error sending the TYPE command\n");
 			return 0;
 		}
-		free(message);
-		
-		return get_server_reply();
-	}
-	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
-	return 0;
-
-}
-int ftp_mode(int opt)
-{
-	if(cc_status())
-	{	
-		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "TYPE A N\n");
-		printf("%s", message);
-
-		//delete
-
-		if (server_send(get_cc_socket(), message, strlen(message))<0)
-		{
-			printf("Error sending the CWD command\n");
-			free(message);
-			return 0;
-		}
-		free(message);
-		
 		return get_server_reply();
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
@@ -530,12 +464,8 @@ int ftp_mkd(char* dir)
 {
 	if(cc_status())
 	{	
-		char *string = (char*)malloc(sizeof(char)*50);
-		strcpy(string, dir);
-
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "MKD %s\n", string);
-		free(string);
+		sprintf(message, "MKD %s\n", dir);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -555,12 +485,8 @@ int ftp_rmd(char* dir)
 {
 	if(cc_status())
 	{	
-		char *string = (char*)malloc(sizeof(char)*50);
-		strcpy(string, dir);
-
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "RMD %s\n", string);
-		free(string);
+		sprintf(message, "RMD %s\n", dir);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -579,12 +505,9 @@ int ftp_dele(char* file)
 {
 	if(cc_status())
 	{	
-		char *string = (char*)malloc(sizeof(char)*50);
-		strcpy(string, file);
-
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "DELE %s\n", string);
-		free(string);
+		sprintf(message, "DELE %s\n", file);
+
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the DELE command\n");
@@ -609,11 +532,10 @@ int ftp_stor(char* file)
 			return 0;
 		}
 		
+		ftp_type();
+
 		char *message = (char*)malloc(sizeof(char)*50);
 		sprintf(message, "STOR %s\n", file);
-
-		server_send(get_cc_socket(), "TYPE I N\n", strlen("TYPE A N\n"));
-		get_server_reply();
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -627,6 +549,7 @@ int ftp_stor(char* file)
 		{
 			return 0;
 		}
+
 		///	
 		FILE *ptr;
 		ptr = fopen(file, "rb");
@@ -711,13 +634,6 @@ int ftp_help()
 			printf("%s",data);
 		}while(strcmp(data+strlen(data)-1, ""));
 		
-		//sr = control_receive();
-		//printf("%s",sr);
-		//
-		//if(!handle_response(sr))
-		//{
-		//	return 0;
-		//}
 		return 1;
 	}
 	printf("open [IP [PORT]]\n-> supports only IPv4\nQuit => close the client\n");
@@ -741,13 +657,11 @@ int fetch_data_port(char* sr)
 //The following are the FTP commands:
 //which ain't implemented
 //
-//
 //            ACCT <SP> <account-information> <CRLF>
 //            SMNT <SP> <pathname> <CRLF>
 //            REIN <CRLF>
 //            PORT <SP> <host-port> <CRLF>
 //            PASV <CRLF>
-//            TYPE <SP> <type-code> <CRLF>
 //            STRU <SP> <structure-code> <CRLF>
 //            MODE <SP> <mode-code> <CRLF>
 //            STOU <CRLF>
@@ -763,4 +677,3 @@ int fetch_data_port(char* sr)
 //            STAT [<SP> <pathname>] <CRLF>
 //            HELP [<SP> <string>] <CRLF>
 //            noop <crlf>
-// 

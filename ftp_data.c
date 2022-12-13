@@ -8,7 +8,6 @@ struct server_status *status;
 
 void create_server_status()
 {
-	
 	status = (struct server_status*)malloc(sizeof(struct server_status));
 
 	status->cc_status = 0;

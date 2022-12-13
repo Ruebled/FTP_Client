@@ -17,12 +17,9 @@ static volatile sig_atomic_t _;
 
 static void sig_handler()
 {
-
 	printf("\b\b  \n");
-	printf("ftp--> ");
 	fflush(stdout);
 }
-//
 
 int main(int argc, char *argv[])
 {

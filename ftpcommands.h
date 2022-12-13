@@ -16,6 +16,7 @@ int ftp_mkd(char*dir);
 int ftp_rmd(char*dir);
 int ftp_dele(char*file);
 int ftp_syst();
+int ftp_type();
 
 int ftp_retr(char*file);
 int ftp_stor(char*file);

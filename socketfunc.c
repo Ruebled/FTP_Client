@@ -89,9 +89,9 @@ char *control_receive()
 }
 
 //get message from server via data connection
-unsigned char *data_receive(int len)
+char *data_receive(int len)
 {
-	unsigned char *server_data = (unsigned char*)malloc(1);
+	char *server_data = (char*)malloc(1);
 	if((recv(get_dc_socket(), server_data, 1, 0)<1))
 	{
 		dc_disconnected();
