@@ -73,23 +73,18 @@ int data_send(int socket_desc, unsigned char *message, int message_len)
 }
 
 //get message from server via control connection
-char *control_receive()
+void control_receive(char* server_reply)
 {
-	char* server_reply = (char*)malloc(sizeof(char)*1000);
 
-	recv(get_cc_socket(), server_reply, 1000, 0);
+	recv(get_cc_socket(), server_reply, 500, 0);
 
-	return server_reply;
 }
 
 //get message from server via data connection
-char *data_receive(int len)
+void data_receive(char * server_data)
 {
-	char *server_data = (char*)malloc(1);
 	if((recv(get_dc_socket(), server_data, 1, 0)<1))
 	{
 		dc_disconnected();
 	}
-
-	return server_data;
 }

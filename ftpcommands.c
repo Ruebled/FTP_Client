@@ -28,13 +28,14 @@ int establish_control_connection(char* IP, int PORT)
 
 int get_server_reply()
 {
-	char* sr;
-	sr = control_receive();
-	printf("%s",sr);
+	char* server_reply = malloc(sizeof(char)*500);
+	control_receive(server_reply);
+	printf("%s",server_reply);
 
-	int res = handle_response(sr);
+	int res = handle_response(server_reply);
 
-	free(sr);
+	strcpy((server_reply), "");
+	free(server_reply);
 	return res;
 }
 //Try to connect via data channel
@@ -239,12 +240,13 @@ int ftp_ls(char*dir)
 
 		if(!get_server_reply()) return 0;
 
-		char *data;
+		char *server_data = (char*)malloc(1);
 		do
 		{
-			data = data_receive();
+			data_receive(server_data);
+			printf("%s", server_data);
 			
-		}while(strcmp(data, ""));
+		}while(dc_status());
 		
 		return get_server_reply();
 	}
@@ -278,43 +280,38 @@ int ftp_retr(char* dir)
 			return 0;
 		}
 		
-		char *string = (char*)malloc(sizeof(char)*50);
-		strcpy(string, dir);
-		
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "RETR %s\n", string);
+		sprintf(message, "RETR %s\n", dir);
 
-		server_send(get_cc_socket(), "TYPE I N\n", strlen("TYPE I N\n"));
-		get_server_reply();
-		server_send(get_cc_socket(), "MODE S\n", strlen("MODE S\n"));
-		get_server_reply();
-		server_send(get_cc_socket(), "STRU F\n", strlen("STRU F\n"));
-		get_server_reply();
-		
+		ftp_type();
+
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the RETR command\n");
-			free(string);
 			return 0;
 		}
 		free(message);
 
 		if(!get_server_reply())
 		{
-			free(string);
 			return 0;	
 		}
 		
-		char *data;
-
 		FILE * file;
-		file = fopen(string, "wb");	
-		//check if fopen is succesfull///
-		free(string);
+		file = fopen(dir, "wb");	
+		if(file==NULL)
+		{
+			printf("Couldn't open file with this name\nWriting protection?\n");
+			return 0;
+		}
+
+		///compatibility between char* and unsigned char*
+		char *server_data = (char*)malloc(1);
 		do
 		{
-			data = data_receive();
-			fwrite(data, sizeof(unsigned char*), 1, file);
+			data_receive(server_data);
+			fwrite(server_data, sizeof(unsigned char*), 1, file);
+
 		}while(dc_status());
 
 		fclose(file);
@@ -480,6 +477,15 @@ int ftp_stor(char* file)
 {
 	if(cc_status())
 	{
+		FILE *ptr;
+
+		ptr = fopen(file, "rb");
+		if (ptr == NULL)
+		{
+			printf("Fisier neexistent\n");
+			return 0;
+		}
+
 		if(!establish_data_connection())
 		{
 			printf("Couldn't establish data connection\n");
@@ -505,7 +511,6 @@ int ftp_stor(char* file)
 		}
 
 		///	
-		FILE *ptr;
 
 		unsigned int dc_socket;
 		unsigned int size;
@@ -517,12 +522,6 @@ int ftp_stor(char* file)
 		double cpu_time_used;
 		double speed;
 
-		ptr = fopen(file, "rb");
-		if (ptr == NULL)
-		{
-			printf("Fisier neexistent\n");
-			return 0;
-		}
 
 		dc_socket = get_dc_socket();
 		size = sizeof(unsigned char);
@@ -551,7 +550,7 @@ int ftp_stor(char* file)
 		cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;	
 		speed = (bytes/cpu_time_used)/1000;
 
-		printf("%lu bytes sent in %lf seconds (%lf bytes/sec)\n", bytes, cpu_time_used, speed);
+		printf("%lu bytes sent in %f seconds (%lf kbytes/sec)\n", bytes, cpu_time_used, speed);
 
 		return 0;
 		///
@@ -572,15 +571,11 @@ int ftp_quit()
 			return 0;
 		}
 
-		char* sr;
-		sr = control_receive();
-		printf("%s",sr);
-		if(!handle_response(sr))
+		if(get_server_reply()<0)
 		{
-			return 0;
+			cc_disconnected();
+			return -1;
 		}
-		cc_disconnected();
-		return -1;
 	}
 	return -1;
 }
@@ -603,23 +598,18 @@ int ftp_help()
 			return 0;
 		}
 
-		char* sr;
-		sr = control_receive();
-		printf("%s",sr);
-		if(!handle_response(sr))
-		{
-			return 0;
-		}
-		char *data;
+		get_server_reply();
+
+		char *server_data = (char*)malloc(1);
 		do
 		{
-			data = data_receive();
-			printf("%s",data);
-		}while(strcmp(data+strlen(data)-1, ""));
+			data_receive(server_data);
+			printf("%s",server_data);
+		}while(dc_status());
 		
 		return 1;
 	}
-	printf("open [IP [PORT]]\n-> supports only IPv4\nQuit => close the client\n");
+	printf("open [IP] [PORT]\n*For IP - supports only IPv4\n*For PORT (optional field) for \n\tdefault port 21, write for other\nQuit => close the client\n");
 	return 0;
 }
 

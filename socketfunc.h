@@ -13,8 +13,8 @@ int server_disconnect(int);
 int server_send(int, char*, int);
 int data_send(int, unsigned char*, int);
 
-char* control_receive();
+void control_receive(char*);
 
-char* data_receive();
+void data_receive(char*);
 
 #endif
