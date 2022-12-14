@@ -72,6 +72,9 @@ int check_command(char *com)
 	{
 		ftp_help();
 	}
+	else if (!strcmp(*args, ""))
+	{
+	}
 	else
 	{
 		printf("Unknown command\nTry HELP\n");

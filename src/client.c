@@ -17,7 +17,7 @@ static volatile sig_atomic_t _;
 
 static void sig_handler()
 {
-	printf("\b\b  \n");
+	printf("\b\b  \b\b");
 	fflush(stdout);
 }
 

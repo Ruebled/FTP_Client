@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h> 
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "ftp_data.h"
 #include "socketfunc.h"
@@ -28,13 +28,17 @@ int establish_control_connection(char* IP, int PORT)
 
 int get_server_reply()
 {
-	char* server_reply = malloc(sizeof(char)*500);
+	char* server_reply = malloc(sizeof(char)*501);
 	control_receive(server_reply);
 	printf("%s",server_reply);
 
 	int res = handle_response(server_reply);
 
-	strcpy((server_reply), "");
+	int i=0;
+	while(strcmp((server_reply+(i)), "\n"))
+	{
+		strcpy((server_reply+(i++)), "");
+	}
 	free(server_reply);
 	return res;
 }
@@ -106,6 +110,9 @@ int handle_response(char* sr)
 
 		case 332:
 			printf("ACCT info required\nNot yet created the function\n");
+			return 0;
+		case 530:
+			cc_disconnected();
 			return 0;
 
 		default:
@@ -517,23 +524,22 @@ int ftp_stor(char* file)
 		unsigned char* data;
 
 		size_t bytes;
-		clock_t start, end;
 
-		double cpu_time_used;
 		double speed;
 
+		struct timeval stop, start;
 
 		dc_socket = get_dc_socket();
 		size = sizeof(unsigned char);
 		data = (unsigned char*)malloc(sizeof(unsigned char));
 
 		bytes = 0;
-		start = clock();
+		gettimeofday(&start, 0);
 		do
 		{
 			if(fread(data, size, 1, ptr)-1)
 			{
-				end = clock();
+				gettimeofday(&stop, 0);
 				break;
 			}
 			data_send(dc_socket, data, size);
@@ -546,15 +552,14 @@ int ftp_stor(char* file)
 		free(data);
 
 		get_server_reply();
+		long long elapsed = (stop.tv_sec-start.tv_sec) + (stop.tv_usec-start.tv_usec)/1000000LL;
 
-		cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;	
-		speed = (bytes/cpu_time_used)/1000;
+		speed = ((float)bytes)/elapsed;
 
-		printf("%lu bytes sent in %f seconds (%lf kbytes/sec)\n", bytes, cpu_time_used, speed);
+		printf("%lu bytes sent in %lld seconds (%lf kbytes/sec)\n", bytes, elapsed, speed);
 
 		return 0;
 		///
-
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
 	return 0;
