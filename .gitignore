@@ -2,3 +2,4 @@
 *.vim
 client
 mem*
+build
