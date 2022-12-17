@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ftp_data.h"
+#include "include/ftp_data.h"
 
 //AF_INET represent address family, mean uses IPv4
 //SOCK_STREAM means connection oriented protocol aka. TCP
@@ -47,11 +47,14 @@ int create_dc_socket()
 //Connect to either control or data port
 int server_connect(int socket_desc, char *IP, int PORT)
 {
+	//set timeout
 	server.sin_addr.s_addr = inet_addr(IP);
-	server.sin_family = AF_INET; server.sin_port = htons(PORT);
+	server.sin_family = AF_INET; 
+	server.sin_port = htons(PORT);
 	
 	return connect(socket_desc, (struct sockaddr *)&server, sizeof(server));
 }
+
 int server_disconnect(int socket_desc)
 {
 	if(close(socket_desc)>-1)
@@ -81,7 +84,15 @@ void control_receive(char* server_reply)
 }
 
 //get message from server via data connection
-void data_receive(char * server_data)
+void data_receive(unsigned char * server_data)
+{
+	if((recv(get_dc_socket(), server_data, 1, 0)<1))
+	{
+		dc_disconnected();
+	}
+}
+
+void info_receive(char * server_data)
 {
 	if((recv(get_dc_socket(), server_data, 1, 0)<1))
 	{

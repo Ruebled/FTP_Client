@@ -1,50 +1,49 @@
-# The name of the source files
-SOURCES = client.c check.c ftpcommands.c ftp_data.c socketfunc.c trim.c
-#
-# # The name of the executable
-EXE = client
-#
-# # Flags for compilation (adding warnings are always good)
+
+TARGET_EXEC := ftp-cli
+
+BUILD_DIR := ./build
+SRC_DIRS := ./src
+
+CC = gcc
+
 CFLAGS = -Wall -g -ggdb3
 
-#
-# # Flags for linking (none for the moment)
-LDFLAGS =
-#
-# # Libraries to link with (none for the moment)
-LIBS =
-#
-# # Use the GCC frontend program when linking
-LD = gcc
-#
-# # This creates a list of object files from the source files
-OBJECTS = $(SOURCES:%.c=%.o)
-#
-# # The first target, this will be the default target if none is specified
-# # This target tells "make" to make the "all" target
-default: all
-#
-# # Having an "all" target is customary, so one could write "make all"
-# # It depends on the executable program
-all: $(EXE)
-#
-# # This will link the executable from the object files
-$(EXE): $(OBJECTS)
-	$(LD) $(LDFLAGS) $(OBJECTS) -o  $(EXE) $(LIBS)
+# Find all the C and C++ files we want to compile
+# Note the single quotes around the * expressions. Make will incorrectly expand these otherwise.
+SRCS := $(shell find $(SRC_DIRS) -name '*.c')
 
-# This is a target that will compiler all needed source files into object files
-# We don't need to specify a command or any rules, "make" will handle it automatically
-#%.o: %.c
-#
-# # Target to clean up after us
+# String substitution for every C/C++ file.
+# As an example, hello.cpp turns into ./build/hello.cpp.o
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+
+# String substitution (suffix version without %).
+# As an example, ./build/hello.cpp.o turns into ./build/hello.cpp.d
+DEPS := $(OBJS:.o=.d)
+
+# Every folder in ./src will need to be passed to GCC so that it can find header files
+INC_DIRS := $(shell find $(SRC_DIRS) -type d)
+# Add a prefix to INC_DIRS. So moduleA would become -ImoduleA. GCC understands this -I flag
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
+# The -MMD and -MP flags together generate Makefiles for us!
+# These files will have .d instead of .o as the output.
+CPPFLAGS := $(INC_FLAGS) -MMD -MP
+
+# The final build step.
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+
+# Build step for C source
+$(BUILD_DIR)/%.c.o: %.c
+	mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+
+.PHONY: clean
 clean:
-	-rm -f $(EXE)      # Remove the executable file
-	-rm -f $(OBJECTS)  # Remove the object files
+	rm -r $(BUILD_DIR)
 
-# Finally we need to tell "make" what source and header file each object file depends on
-client.o: client.c check.h trim.h ftpcommands.h ftp_data.h
-check.o: check.c check.h ftpcommands.h trim.h
-ftpcommands.o: ftpcommands.c ftpcommands.h ftp_data.h socketfunc.h check.h
-ftp_data.o: ftp_data.c ftp_data.h
-socketfunc.o: socketfunc.c socketfunc.h ftp_data.h
-trim.o: trim.c trim.h
+# Include the .d makefiles. The - at the front suppresses the errors of missing
+# Makefiles. Initially, all the .d files will be missing, and we don't want those
+# errors to show up.
+-include $(DEPS)

@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "trim.h"
-#include "check.h"
-#include "ftpcommands.h"
-#include "ftp_data.h"
+#include "include/trim.h"
+#include "include/check.h"
+#include "include/ftpcommands.h"
+#include "include/ftp_data.h"
 
 
 

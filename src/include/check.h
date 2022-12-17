@@ -18,10 +18,5 @@ int conv_to_num(char*);
 char** split_to_array(char*, const char*);
 
 void destroy(char** args);
-//make function to free the array 
-//ftpcommands hadle response 35
-//
-
-//char* get_string(char**args);
 
 #endif

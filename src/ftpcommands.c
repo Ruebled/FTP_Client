@@ -3,11 +3,11 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "ftp_data.h"
-#include "socketfunc.h"
-#include "check.h"
-#include "ftpcommands.h"
-#include "trim.h"
+#include "include/ftp_data.h"
+#include "include/socketfunc.h"
+#include "include/check.h"
+#include "include/ftpcommands.h"
+#include "include/trim.h"
 
 //Try to connect to a server in control connection
 int establish_control_connection(char* IP, int PORT)
@@ -39,9 +39,11 @@ int get_server_reply()
 	{
 		strcpy((server_reply+(i++)), "");
 	}
+	strcpy((server_reply+(i++)), "");
 	free(server_reply);
 	return res;
 }
+
 //Try to connect via data channel
 int establish_data_connection()
 {
@@ -63,14 +65,14 @@ int establish_data_connection()
 	{
 		return 0;
 	}
-		
+
 	if(server_connect(get_dc_socket(), get_session_ip(), data_port)<0)
 	{
 		printf("Couldn't connect to data server\n");
 		return 0;
 	}
 	dc_connected();
-	
+
 	return 1;
 }
 
@@ -141,7 +143,7 @@ int ftp_open(char **args)
 			printf("Too few parameters\nTry help\n");
 			return 0;
 		}
-		
+
 		if (strcmp(*(args+2), ""))
 		{
 			if(!check_port(*(args+2)))
@@ -150,13 +152,13 @@ int ftp_open(char **args)
 			}
 			port_valid = atoi(*(args+2));
 		}
-		
+
 		if (strcmp(*(args+3), ""))
 		{
 			printf("Too many parameters\n");
 			return 0;
 		}
-		
+
 		if(establish_control_connection(*(args+1), port_valid)<0)
 		{
 			return 0;
@@ -177,7 +179,7 @@ int ftp_user()
 
 	printf("USER: ");
 	fgets(input, 50, stdin);
-	
+
 	char* message = (char*)malloc(sizeof(char)*57);
 	sprintf(message, "USER %s", input);	
 
@@ -198,10 +200,10 @@ int ftp_user()
 int ftp_passwd()
 {
 	char* input = (char*)malloc(sizeof(char)*50);
-	
+
 	printf("PASS: ");
 	fgets(input, 50, stdin);
-	
+
 	char* message = (char*)malloc(sizeof(char)*56);
 	sprintf(message, "PASS %s", input);	
 
@@ -215,7 +217,7 @@ int ftp_passwd()
 	}
 
 	free(message);
-	
+
 	return get_server_reply();
 }
 //FTP LS
@@ -225,7 +227,6 @@ int ftp_ls(char*dir)
 	{
 		if(!establish_data_connection())
 		{
-			printf("Couldn't establish data connection\n");
 			return 0;
 		}
 		char *string = (char*)malloc(sizeof(char)*50);
@@ -247,14 +248,15 @@ int ftp_ls(char*dir)
 
 		if(!get_server_reply()) return 0;
 
-		char *server_data = (char*)malloc(1);
+		char *server_data = (char*)malloc(2);
 		do
 		{
-			data_receive(server_data);
+			///receive with timeout look to implement
+			info_receive(server_data);
 			printf("%s", server_data);
-			
+
 		}while(dc_status());
-		
+
 		return get_server_reply();
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
@@ -270,7 +272,7 @@ int ftp_syst()
 			printf("Error sending the SYST command\n");
 			return 0;
 		}
-		
+
 		return get_server_reply();
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
@@ -286,7 +288,7 @@ int ftp_retr(char* dir)
 			printf("Couldn't establish data connection\n");
 			return 0;
 		}
-		
+
 		char *message = (char*)malloc(sizeof(char)*50);
 		sprintf(message, "RETR %s\n", dir);
 
@@ -303,7 +305,7 @@ int ftp_retr(char* dir)
 		{
 			return 0;	
 		}
-		
+
 		FILE * file;
 		file = fopen(dir, "wb");	
 		if(file==NULL)
@@ -313,7 +315,7 @@ int ftp_retr(char* dir)
 		}
 
 		///compatibility between char* and unsigned char*
-		char *server_data = (char*)malloc(1);
+		unsigned char *server_data = malloc(1);
 		do
 		{
 			data_receive(server_data);
@@ -342,7 +344,7 @@ int ftp_cwd(char* dir)
 			return 0;
 		}
 		free(message);
-		
+
 		return get_server_reply();
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
@@ -364,7 +366,7 @@ int ftp_test()
 			return 0;
 		}
 		free(message);
-		
+
 		return get_server_reply();
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
@@ -473,7 +475,7 @@ int ftp_dele(char* file)
 			return 0;
 		}
 		free(message);
-		
+
 		return get_server_reply();
 	}
 	printf("Not connected to any server\nTry open [Ip[Port]]\n");
@@ -498,7 +500,7 @@ int ftp_stor(char* file)
 			printf("Couldn't establish data connection\n");
 			return 0;
 		}
-		
+
 		ftp_type();
 
 		char *message = (char*)malloc(sizeof(char)*50);
@@ -608,10 +610,10 @@ int ftp_help()
 		char *server_data = (char*)malloc(1);
 		do
 		{
-			data_receive(server_data);
+			info_receive(server_data);
 			printf("%s",server_data);
 		}while(dc_status());
-		
+
 		return 1;
 	}
 	printf("open [IP] [PORT]\n*For IP - supports only IPv4\n*For PORT (optional field) for \n\tdefault port 21, write for other\nQuit => close the client\n");
@@ -623,9 +625,9 @@ int fetch_data_port(char* sr)
 {
 	char** args = split_to_array(sr, "(");
 	char** bars_code = split_to_array(*(args+1), "|");
-	
+
 	int data_code = conv_to_num(*(bars_code));
-	
+
 	if(data_code)
 	{
 		return data_code;

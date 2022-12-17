@@ -3,9 +3,9 @@
 #include <string.h> 
 #include <ctype.h>
 
-#include "check.h"
-#include "ftpcommands.h"
-#include "trim.h"
+#include "include/check.h"
+#include "include/ftpcommands.h"
+#include "include/trim.h"
 
 int check_command(char *com)
 {
