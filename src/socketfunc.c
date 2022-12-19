@@ -83,18 +83,22 @@ void control_receive(char* server_reply)
 
 }
 
-//get message from server via data connection
-void data_receive(unsigned char * server_data)
+
+void info_receive(unsigned char * server_data)
 {
-	if((recv(get_dc_socket(), server_data, 1, 0)<1))
+	if((recv(get_dc_socket(), server_data, sizeof(unsigned char), 0)<1))
 	{
 		dc_disconnected();
 	}
 }
 
-void info_receive(char * server_data)
+
+//get message from server via data connection
+//use O_NONBLOCK on socket_addr and wait for some period like max 5 ms, if not any response, close connection,
+//do a separate function for server_connect too
+void data_receive(unsigned char * server_data)
 {
-	if((recv(get_dc_socket(), server_data, 1, 0)<1))
+	if((recv(get_dc_socket(), server_data, sizeof(unsigned char), 0)<1))
 	{
 		dc_disconnected();
 	}

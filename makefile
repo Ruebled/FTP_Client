@@ -1,4 +1,3 @@
-
 TARGET_EXEC := ftp-cli
 
 BUILD_DIR := ./build

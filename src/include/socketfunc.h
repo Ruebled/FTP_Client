@@ -17,6 +17,6 @@ void control_receive(char*);
 
 void data_receive(unsigned char*);
 
-void info_receive(char*);
+void info_receive(unsigned char*);
 
 #endif

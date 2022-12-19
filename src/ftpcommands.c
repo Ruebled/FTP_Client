@@ -229,6 +229,7 @@ int ftp_ls(char*dir)
 		{
 			return 0;
 		}
+
 		char *string = (char*)malloc(sizeof(char)*50);
 		if(strcmp(dir, ""))
 		{
@@ -241,21 +242,23 @@ int ftp_ls(char*dir)
 
 		if (server_send(get_cc_socket(), string, strlen(string))<0)
 		{
+			free(string);
 			printf("Error sending the LS command\n");
 			return 0;
 		}
 		free(string);
+		
+		get_server_reply();
 
-		if(!get_server_reply()) return 0;
-
-		char *server_data = (char*)malloc(2);
+		unsigned char *server_data = malloc(sizeof(unsigned char));
 		do
 		{
 			///receive with timeout look to implement
 			info_receive(server_data);
-			printf("%s", server_data);
+			printf("%c", *server_data);
 
 		}while(dc_status());
+
 
 		return get_server_reply();
 	}
@@ -297,25 +300,22 @@ int ftp_retr(char* dir)
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the RETR command\n");
+			server_disconnect(get_dc_socket());
 			return 0;
 		}
 		free(message);
-
-		if(!get_server_reply())
-		{
-			return 0;	
-		}
 
 		FILE * file;
 		file = fopen(dir, "wb");	
 		if(file==NULL)
 		{
 			printf("Couldn't open file with this name\nWriting protection?\n");
+			server_disconnect(get_dc_socket());
 			return 0;
 		}
 
 		///compatibility between char* and unsigned char*
-		unsigned char *server_data = malloc(1);
+		unsigned char *server_data = malloc(sizeof(unsigned char));
 		do
 		{
 			data_receive(server_data);
@@ -607,7 +607,7 @@ int ftp_help()
 
 		get_server_reply();
 
-		char *server_data = (char*)malloc(1);
+		unsigned char*server_data = malloc(1);
 		do
 		{
 			info_receive(server_data);
