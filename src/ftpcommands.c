@@ -8,6 +8,7 @@
 #include "include/check.h"
 #include "include/ftpcommands.h"
 #include "include/trim.h"
+#include "include/misc_func.h"
 
 //Try to connect to a server in control connection
 int establish_control_connection(char* IP, int PORT)
@@ -83,6 +84,8 @@ int handle_response(char* sr)
 
 	int reply_code = conv_to_num(*reply);
 
+	destroy(reply);
+
 	switch(reply_code)
 	{
 		case 257:
@@ -95,6 +98,7 @@ int handle_response(char* sr)
 		case 221:
 		case 226:
 		case 150:
+		case 214:
 			return 0;
 
 		case 220:
@@ -253,12 +257,12 @@ int ftp_ls(char*dir)
 		unsigned char *server_data = malloc(sizeof(unsigned char));
 		do
 		{
-			///receive with timeout look to implement
 			info_receive(server_data);
 			printf("%c", *server_data);
 
 		}while(dc_status());
 
+		free(server_data);
 
 		return get_server_reply();
 	}
@@ -305,11 +309,12 @@ int ftp_retr(char* dir)
 		}
 		free(message);
 
+		//if dc_status or something...
 		FILE * file;
 		file = fopen(dir, "wb");	
 		if(file==NULL)
 		{
-			printf("Couldn't open file with this name\nWriting protection?\n");
+			printf("Couldn't open file with this name\n");
 			server_disconnect(get_dc_socket());
 			return 0;
 		}
@@ -319,11 +324,12 @@ int ftp_retr(char* dir)
 		do
 		{
 			data_receive(server_data);
-			fwrite(server_data, sizeof(unsigned char*), 1, file);
+			fwrite(server_data, sizeof(unsigned char), 1, file);
 
 		}while(dc_status());
 
 		fclose(file);
+		free(server_data);
 
 		return get_server_reply();
 	}
@@ -527,8 +533,6 @@ int ftp_stor(char* file)
 
 		size_t bytes;
 
-		double speed;
-
 		struct timeval stop, start;
 
 		dc_socket = get_dc_socket();
@@ -537,6 +541,7 @@ int ftp_stor(char* file)
 
 		bytes = 0;
 		gettimeofday(&start, 0);
+		//send data byte by byte till the end of the file
 		do
 		{
 			if(fread(data, size, 1, ptr)-1)
@@ -548,20 +553,22 @@ int ftp_stor(char* file)
 			bytes++;
 		}while(1);
 
+		//disconnect from data connection toi
+		//indicate completned of sending data
 		server_disconnect(dc_socket);
 
 		fclose(ptr);
 		free(data);
 
 		get_server_reply();
-		long long elapsed = (stop.tv_sec-start.tv_sec) + (stop.tv_usec-start.tv_usec)/1000000LL;
 
-		speed = ((float)bytes)/elapsed;
-
-		printf("%lu bytes sent in %lld seconds (%lf kbytes/sec)\n", bytes, elapsed, speed);
+		//print sending raport
+		printf("%lu bytes sent in ", bytes);
+		ret_time((stop.tv_sec-start.tv_sec), (stop.tv_usec-start.tv_usec)/(int)(1000)); 
+		ret_speed(bytes, (stop.tv_sec-start.tv_sec), (stop.tv_usec-start.tv_usec)/(int)(1000));
+		///
 
 		return 0;
-		///
 	}
 	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
 	return 0;
@@ -593,28 +600,25 @@ int ftp_help()
 {
 	if(cc_status())
 	{
-		if(!establish_data_connection())
-		{
-			printf("Couldn't establish data connection\n");
-			return 0;
-		}
-
 		if (server_send(get_cc_socket(), "HELP\n", strlen("HELP\n"))<0)
 		{
 			printf("Error sending the HELP command\n");
 			return 0;
 		}
 
-		get_server_reply();
+		char* server_reply = malloc(sizeof(char)*501);
+		control_receive(server_reply);
+		printf("%s",server_reply);
 
-		unsigned char*server_data = malloc(1);
-		do
+		int i=0;
+		while(strcmp((server_reply+(i)), "\n"))
 		{
-			info_receive(server_data);
-			printf("%s",server_data);
-		}while(dc_status());
+			strcpy((server_reply+(i++)), "");
+		}
+		strcpy((server_reply+(i++)), "");
+		free(server_reply);
 
-		return 1;
+		return 0;
 	}
 	printf("open [IP] [PORT]\n*For IP - supports only IPv4\n*For PORT (optional field) for \n\tdefault port 21, write for other\nQuit => close the client\n");
 	return 0;
@@ -627,6 +631,8 @@ int fetch_data_port(char* sr)
 	char** bars_code = split_to_array(*(args+1), "|");
 
 	int data_code = conv_to_num(*(bars_code));
+	destroy(bars_code);
+	destroy(args);
 
 	if(data_code)
 	{
@@ -634,6 +640,7 @@ int fetch_data_port(char* sr)
 	}
 	return 0;
 }
+
 //The following are the FTP commands:
 //which ain't implemented
 //

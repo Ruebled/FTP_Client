@@ -98,7 +98,7 @@ void info_receive(unsigned char * server_data)
 //do a separate function for server_connect too
 void data_receive(unsigned char * server_data)
 {
-	if((recv(get_dc_socket(), server_data, sizeof(unsigned char), 0)<1))
+	if((recv(get_dc_socket(), server_data, sizeof(unsigned char)*1, 0)<1))
 	{
 		dc_disconnected();
 	}

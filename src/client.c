@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 		printf("ftp--> ");
 		fgets(command, 1000, stdin);
 
-		//get rid of any before or after spaces
+		//get rid of any before or after spaces or \n
 		trim(command);
 		
 

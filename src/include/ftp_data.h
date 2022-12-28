@@ -9,6 +9,7 @@ struct server_status
 	int data_connection_socket;
 	char* session_ip;
 };
+
 void create_server_status();
 void destroy_server_status();
 int cc_status();
