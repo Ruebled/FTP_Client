@@ -89,18 +89,20 @@ int handle_response(char* sr)
 	switch(reply_code)
 	{
 		case 257:
-		case 550:
 		case 250:
 		case 200:
-		case 450:
 		case 215:
 		case 502:
 		case 221:
-		case 226:
 		case 150:
 		case 214:
 			return 0;
 
+		case 226:
+		case 450:
+		case 550:
+			dc_disconnected();
+			return 0;
 		case 220:
 			return ftp_user();
 
@@ -227,33 +229,39 @@ int ftp_passwd()
 //FTP LS
 int ftp_ls(char*dir)
 {
-	if(cc_status())
+	if(!cc_status())
 	{
-		if(!establish_data_connection())
-		{
-			return 0;
-		}
+		printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+		return 0;
+	}
 
-		char *string = (char*)malloc(sizeof(char)*50);
-		if(strcmp(dir, ""))
-		{
-			sprintf(string, "LIST %s\n",  dir);
-		}
-		else
-		{
-			sprintf(string, "LIST\n");
-		}
+	if(!establish_data_connection())
+	{
+		return 0;
+	}
 
-		if (server_send(get_cc_socket(), string, strlen(string))<0)
-		{
-			free(string);
-			printf("Error sending the LS command\n");
-			return 0;
-		}
+	char *string = (char*)malloc(sizeof(char)*50);
+	if(strcmp(dir, ""))
+	{
+		sprintf(string, "LIST %s\n",  dir);
+	}
+	else
+	{
+		sprintf(string, "LIST\n");
+	}
+
+	if (server_send(get_cc_socket(), string, strlen(string))<0)
+	{
 		free(string);
-		
-		get_server_reply();
+		printf("Error sending the LS command\n");
+		return 0;
+	}
+	free(string);
+	
+	get_server_reply();
 
+	if(dc_status())
+	{
 		unsigned char *server_data = malloc(sizeof(unsigned char));
 		do
 		{
@@ -266,75 +274,96 @@ int ftp_ls(char*dir)
 
 		return get_server_reply();
 	}
-	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
 	return 0;
 }
 //FTP SYST
 int ftp_syst()
 {
-	if(cc_status())
+	if(!cc_status())
 	{
-		if (server_send(get_cc_socket(), "SYST\n", strlen("SYST\n"))<0)
-		{
-			printf("Error sending the SYST command\n");
-			return 0;
-		}
-
-		return get_server_reply();
+		printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+		return 0;
 	}
-	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
-	return 0;
+
+	if (server_send(get_cc_socket(), "SYST\n", strlen("SYST\n"))<0)
+	{
+		printf("Error sending the SYST command\n");
+		return 0;
+	}
+
+	return get_server_reply();
 }
 //FTP RETR
 int ftp_retr(char* dir)
 {
-	if(cc_status())
+	if(!cc_status())
 	{
-		if(!establish_data_connection())
-		{
-			printf("Couldn't establish data connection\n");
-			return 0;
-		}
-
-		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "RETR %s\n", dir);
-
-		ftp_type();
-
-		if (server_send(get_cc_socket(), message, strlen(message))<0)
-		{
-			printf("Error sending the RETR command\n");
-			server_disconnect(get_dc_socket());
-			return 0;
-		}
-		free(message);
-
-		//if dc_status or something...
-		FILE * file;
-		file = fopen(dir, "wb");	
-		if(file==NULL)
-		{
-			printf("Couldn't open file with this name\n");
-			server_disconnect(get_dc_socket());
-			return 0;
-		}
-
-		///compatibility between char* and unsigned char*
-		unsigned char *server_data = malloc(sizeof(unsigned char));
-		do
-		{
-			data_receive(server_data);
-			fwrite(server_data, sizeof(unsigned char), 1, file);
-
-		}while(dc_status());
-
-		fclose(file);
-		free(server_data);
-
-		return get_server_reply();
+		printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
+		return 0;
 	}
-	printf("Not connected to any server\nTry OPEN [IP[PORT]]\n");
-	return 0;
+
+	if(!establish_data_connection())
+	{
+		printf("Couldn't establish data connection\n");
+		return 0;
+	}
+
+	char *message = (char*)malloc(sizeof(char)*50);
+	sprintf(message, "RETR %s\n", dir);
+
+	ftp_type();
+
+	if (server_send(get_cc_socket(), message, strlen(message))<0)
+	{
+		printf("Error sending the RETR command\n");
+		server_disconnect(get_dc_socket());
+		return 0;
+	}
+	free(message);
+	get_server_reply();
+
+	//break if file non-existent
+	if(!dc_status())
+	{
+		return 0;
+	}
+
+	FILE * file;
+	file = fopen(dir, "wb");	
+	if(file==NULL)
+	{
+		printf("Couldn't open file with this name\n");
+		server_disconnect(get_dc_socket());
+		return 0;
+	}
+
+	struct timeval stop, start;
+	size_t bytes = 0;
+	int size = sizeof(unsigned char);
+
+	///compatibility between char* and unsigned char*
+	unsigned char *server_data = malloc(sizeof(unsigned char));
+	gettimeofday(&start, 0);
+	do
+	{
+		data_receive(server_data);
+		fwrite(server_data, size, 1, file);
+		bytes++;
+
+	}while(dc_status());
+
+	gettimeofday(&stop, 0);
+
+	fclose(file);
+	free(server_data);
+
+	//print received raport
+	printf("%lu bytes received in ", bytes);
+	ret_time((stop.tv_sec-start.tv_sec), (stop.tv_usec-start.tv_usec)/(int)(1000)); 
+	ret_speed(bytes, (stop.tv_sec-start.tv_sec), (stop.tv_usec-start.tv_usec)/(int)(1000));
+	///
+
+	return get_server_reply();
 }
 int ftp_cwd(char* dir)
 {
