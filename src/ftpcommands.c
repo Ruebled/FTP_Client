@@ -2,6 +2,7 @@
 #include <stdio.h> 
 #include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "include/ftp_data.h"
 #include "include/socketfunc.h"
@@ -9,6 +10,8 @@
 #include "include/ftpcommands.h"
 #include "include/trim.h"
 #include "include/misc_func.h"
+
+char *getpass(const char *prompt);//get password without echoing
 
 //Try to connect to a server in control connection
 int establish_control_connection(char* IP, int PORT)
@@ -205,13 +208,10 @@ int ftp_user()
 //FTP PASS ->Get a from password from stdin, and send via control channel
 int ftp_passwd()
 {
-	char* input = (char*)malloc(sizeof(char)*50);
-
-	printf("PASS: ");
-	fgets(input, 50, stdin);
-
-	char* message = (char*)malloc(sizeof(char)*56);
-	sprintf(message, "PASS %s", input);	
+	char* input = getpass("PASS: ");
+	
+	char* message = (char*)malloc(sizeof(input)+6);
+	sprintf(message, "PASS %s\n", input);	
 
 	free(input);
 
