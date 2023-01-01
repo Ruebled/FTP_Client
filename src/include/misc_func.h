@@ -3,7 +3,6 @@
 
 void ret_time(int stop, int start);
 void ret_speed(int bytes, int sec, int msec);
-//void ret_name(char* file);
 
 
 void toUP(char*);

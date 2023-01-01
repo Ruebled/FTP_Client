@@ -8,8 +8,6 @@
 #include "include/ftpcommands.h"
 #include "include/ftp_data.h"
 
-
-
 //catch and disable function
 //of signal SIGINT
 //produced by CTRL+C

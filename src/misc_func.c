@@ -48,24 +48,6 @@ void ret_speed(int bytes, int sec, int msec)
 	}
 }
 
-//void  ret_name(char* name)
-//{
-//	printf("%s", name);
-//	char * str = malloc(sizeof(char)*strlen(name)+1);
-//	for (size_t i=0; i<=strlen(name); i++)
-//	{
-//		if (strcmp((name+i), "\\"))
-//		{
-//			*(str+i) = *(name+i);		
-//			printf("%s\n", str);
-//		}
-//		*(str+strlen(name)) = '\0';
-//	}
-//	strncpy(name, str, strlen(str)+1);
-//	printf("%s", str);
-//	free(str);
-//}
-
 void toUP(char* comd)
 {
 	for (int i=0; i<strlen(comd); i++)

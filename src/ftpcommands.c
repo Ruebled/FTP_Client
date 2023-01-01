@@ -32,18 +32,13 @@ int establish_control_connection(char* IP, int PORT)
 
 int get_server_reply()
 {
-	char* server_reply = malloc(sizeof(char)*501);
+	char* server_reply = malloc(sizeof(char)*401);
 	control_receive(server_reply);
 	printf("%s",server_reply);
 
 	int res = handle_response(server_reply);
 
-	int i=0;
-	while(strcmp((server_reply+(i)), "\n"))
-	{
-		strcpy((server_reply+(i++)), "");
-	}
-	strcpy((server_reply+(i++)), "");
+	memset(server_reply, 0x00, 401);
 	free(server_reply);
 	return res;
 }
@@ -158,6 +153,7 @@ int ftp_open(char **args)
 			if(!check_port(*(args+2)))
 			{
 				printf("Bad PORT format\n");
+				return 0;
 			}
 			port_valid = atoi(*(args+2));
 		}
