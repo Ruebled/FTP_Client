@@ -36,11 +36,11 @@ void ret_speed(int bytes, int sec, int msec)
 
 	if (speed/1048576)
 	{
-		printf("(%lf mbyte/sec)\n", (double)speed/(double)1048576);
+		printf("(%.3lf mbyte/sec)\n", (double)speed/(double)1048576);
 	}
 	else if (speed/1024)
 	{
-		printf("(%lf kbyte/sec)\n", (double)speed/(double)1024);
+		printf("(%.3lf kbyte/sec)\n", (double)speed/(double)1024);
 	}
 	else
 	{
@@ -56,13 +56,13 @@ void toUP(char* comd)
 	}
 }
 
-int is_occupied(char **args)
+int is_occupied(char **args, int count)
 {
-	for (int i=0; i<4; i++)
+	for (int i=0; i<count; i++)
 	{
 		if (!strcmp(*(args+i),"")) return i;
 	}
-	return 4;
+	return count;
 }
 
 int conv_to_num(char* str)
@@ -81,80 +81,51 @@ int conv_to_num(char* str)
 	}
 	return atoi(str);
 }
+#define cell_size 100
 
-char**  split_to_array(char* inputstr, const char *ch)
+char**  split_to_array(char* inputstr, const char *ch, int count)
 {
-	int input_len = strlen(inputstr);
-	char* str = malloc(sizeof(char)*(input_len+1));
+	char* str = malloc(sizeof(char)*(strlen(inputstr)+1));
 	strcpy(str, inputstr);
 	
-	char** args = (char**)malloc(sizeof(char*)*4);
-	for(size_t i=0; i<4; i++)
+	char** args = (char**)malloc(sizeof(char*)*count);
+	for(size_t i=0; i<count; i++)
 	{
-		*(args+i) = (char*)malloc(sizeof(char)*100);
-		strcpy(*(args+i), "");
+		*(args+i) = (char*)malloc(sizeof(char)*cell_size);
+		memset(*(args+i), 0x00, cell_size);
 	}
 
-	int count=0;
 	char* token = strtok(str, ch);
 	
-	while( token != NULL && count<4)
+	size_t inc = 0;
+	while( token != NULL && inc<count)
 	{
 		trim(token);
 
-		strcpy(*(args+count++), token);
-
-		token = strtok(NULL, ch);	
+		strcpy(*(args+inc++), token);
+		if(inc < count-1)
+		{
+			token = strtok(NULL, ch);	
+		}
+		else
+		{
+			token = strtok(NULL, "");	
+		}
 	}
 	free(str);
+	str = NULL;
 
 	return args;
 }
 
-char**  split(char* inputstr)
+void destroy(char** reply, int count)
 {
-	int input_len = strlen(inputstr);
-	char* str = malloc(sizeof(char)*(input_len+1));
-	strcpy(str, inputstr);
-	
-	char** args = (char**)malloc(sizeof(char*)*2);
-	for(size_t i=0; i<2; i++)
+	for(int i=0; i<count; i++)
 	{
-		*(args+i) = (char*)malloc(sizeof(char)*100);
-		strcpy(*(args+i), "");
-	}
-
-	int count=0;
-	char* token = strtok(str, " ");
-	trim(token);
-
-	while( token != NULL && count<2)
-	{
-		trim(token);
-
-		strncpy(*(args+count++), token, strlen(token)+1);
-
-		token = strtok(NULL, "");	
-	}
-	free(str);
-
-	return args;
-}
-
-void destroy(char** reply)
-{
-	for(int i=0; i<4; i++)
-	{
-		free(*(reply+i++));
+		memset(*(reply+i), 0x00, cell_size);
+		free(*(reply+i));
+		*(reply+i++) = NULL;
    	}
 	free(reply);
-}
-
-void destroy2(char** reply)
-{
-	for(int i=0; i<2; i++)
-	{
-		free(*(reply+i++));
-   	}
-	free(reply);
+	reply = NULL;
 }

@@ -8,10 +8,9 @@
 
 int check_command(char *com)
 { 
-	char **args = split(com); 
+	char **args = split_to_array(com, " ", 2); 
 
-	const char ch = ' ';
-	char **kargs = split_to_array(com, &ch);
+	char **kargs = split_to_array(com, " ", 4);
 
 	toUP(*args);
 
@@ -71,8 +70,8 @@ int check_command(char *com)
 	{
 		if(ftp_quit()<0)
 		{
-			destroy(kargs);
-			destroy2(args);
+			destroy(kargs, 4);
+			destroy(args, 2);
 			return -1;
 		}
 	}
@@ -84,8 +83,8 @@ int check_command(char *com)
 	{
 		printf("Unknown command\nTry HELP\n");
 	}
-	destroy2(args);
-	destroy(kargs);
+	destroy(args, 2);
+	destroy(kargs, 4);
 	return 0;
 }
 //
@@ -98,13 +97,13 @@ int check_command(char *com)
 int check_ip(char* ip)
 {
 	char** args;
-	args = split_to_array(ip, ".");
+	args = split_to_array(ip, ".", 4);
 
-	int sets = is_occupied(args);
+	int sets = is_occupied(args, 4);
 
 	if (sets<4)
 	{
-		destroy(args);
+		destroy(args, 4);
 		return 0; 
 	}
 
@@ -114,11 +113,11 @@ int check_ip(char* ip)
 		int num = conv_to_num(args[i]);
 		if (num<0 || num>255) 
 		{
-			destroy(args);
+			destroy(args, 4);
 			return 0;
 		}
 	}
-	destroy(args);
+	destroy(args, 4);
 	return 1;
 }
 //
