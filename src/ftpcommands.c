@@ -40,6 +40,7 @@ int get_server_reply()
 
 	memset(server_reply, 0x00, 401);
 	free(server_reply);
+	server_reply = NULL;
 	return res;
 }
 
@@ -78,11 +79,11 @@ int establish_data_connection()
 //Do response action to any reply server code
 int handle_response(char* sr)
 {
-	char** reply = split_to_array(sr, " ");
+	char** reply = split_to_array(sr, " ", 1);
 
 	int reply_code = conv_to_num(*reply);
 
-	destroy(reply);
+	destroy(reply, 1);
 
 	switch(reply_code)
 	{
@@ -652,12 +653,12 @@ int ftp_help()
 //Parse data port from EPSV reply
 int fetch_data_port(char* sr)
 {
-	char** args = split_to_array(sr, "(");
-	char** bars_code = split_to_array(*(args+1), "|");
+	char** args = split_to_array(sr, "(", 2);
+	char** bars_code = split_to_array(*(args+1), "|", 2);
 
 	int data_code = conv_to_num(*(bars_code));
-	destroy(bars_code);
-	destroy(args);
+	destroy(bars_code, 2);
+	destroy(args, 2);
 
 	if(data_code)
 	{

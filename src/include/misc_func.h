@@ -7,15 +7,12 @@ void ret_speed(int bytes, int sec, int msec);
 
 void toUP(char*);
 
-int is_occupied(char* []);
+int is_occupied(char* [], int count);
 
 int conv_to_num(char*);
 
-char** split_to_array(char*, const char*);
+char** split_to_array(char*, const char*, int);
 
-char** split(char*);
+void destroy(char** args, int count);
 
-void destroy(char** args);
-
-void destroy2(char** args);
 #endif
