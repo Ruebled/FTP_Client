@@ -102,7 +102,10 @@ char**  split_to_array(char* inputstr, const char *ch, int count)
 	{
 		trim(token);
 
-		strcpy(*(args+inc++), token);
+		strcpy(*(args+inc), token);
+		*(*(args+inc)+strlen(token)) = '\0';
+
+		inc++;
 		if(inc < count-1)
 		{
 			token = strtok(NULL, ch);	
@@ -124,7 +127,7 @@ void destroy(char** reply, int count)
 	{
 		memset(*(reply+i), 0x00, cell_size);
 		free(*(reply+i));
-		*(reply+i++) = NULL;
+		*(reply+i) = NULL;
    	}
 	free(reply);
 	reply = NULL;

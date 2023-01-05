@@ -11,6 +11,8 @@
 #include "include/trim.h"
 #include "include/misc_func.h"
 
+#define comd_term "\r\n"
+
 char *getpass(const char *prompt);//get password without echoing
 
 //Try to connect to a server in control connection
@@ -53,7 +55,8 @@ int establish_data_connection()
 		return 0;
 	}
 
-	if (server_send(get_cc_socket(), "EPSV\n", strlen("EPSV\n"))<0)
+	//Change to work with define comd_term above
+	if (server_send(get_cc_socket(), "EPSV\r\n", strlen("EPSV\r\n"))<0)
 	{
 		printf("Error sending the EPSV command\n");
 		return 0;
@@ -185,9 +188,10 @@ int ftp_user()
 
 	printf("USER: ");
 	fgets(input, 50, stdin);
-
-	char* message = (char*)malloc(sizeof(char)*57);
-	sprintf(message, "USER %s", input);	
+	trim(input);
+	
+   	char* message = (char*)malloc(sizeof(char)*57);
+	sprintf(message, "USER %s%s", input, comd_term);	
 
 	free(input);
 
@@ -207,8 +211,8 @@ int ftp_passwd()
 {
 	char* input = getpass("PASS: ");
 	
-	char* message = (char*)malloc(sizeof(input)+6);
-	sprintf(message, "PASS %s\n", input);	
+	char* message = (char*)malloc(sizeof(input)+7);
+	sprintf(message, "PASS %s%s", input, comd_term);	
 
 	free(input);
 
@@ -216,10 +220,12 @@ int ftp_passwd()
 	{
 		printf("Error sending the password\n");
 		free(message);
+		message = NULL;
 		return 0;
 	}
 
 	free(message);
+	message = NULL;
 
 	return get_server_reply();
 }
@@ -240,11 +246,11 @@ int ftp_ls(char*dir)
 	char *string = (char*)malloc(sizeof(char)*50);
 	if(strcmp(dir, ""))
 	{
-		sprintf(string, "LIST %s\n",  dir);
+		sprintf(string, "LIST %s%s",  dir, comd_term);
 	}
 	else
 	{
-		sprintf(string, "LIST\n");
+		sprintf(string, "LIST%s", comd_term);
 	}
 
 	if (server_send(get_cc_socket(), string, strlen(string))<0)
@@ -282,7 +288,7 @@ int ftp_syst()
 		return 0;
 	}
 
-	if (server_send(get_cc_socket(), "SYST\n", strlen("SYST\n"))<0)
+	if (server_send(get_cc_socket(), "SYST\r\n", strlen("SYST\r\n"))<0)
 	{
 		printf("Error sending the SYST command\n");
 		return 0;
@@ -306,7 +312,7 @@ int ftp_retr(char* dir)
 	}
 
 	char *message = (char*)malloc(sizeof(char)*50);
-	sprintf(message, "RETR %s\n", dir);
+	sprintf(message, "RETR %s%s", dir, comd_term);
 
 	ftp_type();
 
@@ -367,7 +373,7 @@ int ftp_cwd(char* dir)
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "CWD %s\n", dir);
+		sprintf(message, "CWD %s%s", dir, comd_term);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -387,7 +393,7 @@ int ftp_test()
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "ABOR\n");
+		sprintf(message, "ABOR\r\n");
 		printf("%s", message);
 
 
@@ -457,7 +463,7 @@ int ftp_mkd(char* dir)
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "MKD %s\n", dir);
+		sprintf(message, "MKD %s%s", dir, comd_term);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -478,7 +484,7 @@ int ftp_rmd(char* dir)
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "RMD %s\n", dir);
+		sprintf(message, "RMD %s%s", dir, comd_term);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -498,7 +504,7 @@ int ftp_dele(char* file)
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "DELE %s\n", file);
+		sprintf(message, "DELE %s%s", file, comd_term);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -536,7 +542,7 @@ int ftp_stor(char* file)
 		ftp_type();
 
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "STOR %s\n", file);
+		sprintf(message, "STOR %s%s", file, comd_term);
 
 		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
