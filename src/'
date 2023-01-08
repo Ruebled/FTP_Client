@@ -79,7 +79,7 @@ int ftp_user()
 
 	free(input);
 
-	if (control_send(get_cc_socket(), message, strlen(message))<0)
+	if (data_send(get_cc_socket(), message, strlen(message))<0)
 	{
 		printf("Error sending the username\n");
 		free(message);
@@ -105,7 +105,7 @@ int ftp_passwd()
 
 	free(input);
 
-	if (control_send(get_cc_socket(), message, strlen(message))<0)
+	if (data_send(get_cc_socket(), message, strlen(message))<0)
 	{
 		printf("Error sending the password\n");
 		free(message);
@@ -145,7 +145,7 @@ int ftp_ls(char*dir)
 		sprintf(string, "LIST%s", comd_term);
 	}
 
-	if (control_send(get_cc_socket(), string, strlen(string))<0)
+	if (data_send(get_cc_socket(), string, strlen(string))<0)
 	{
 		free(string);
 		printf("Error sending the LS command\n");
@@ -163,7 +163,7 @@ int ftp_ls(char*dir)
 	{
 		do
 		{
-			buff_receive(get_dc_socket(), server_data, buff_size);
+			info_receive(server_data, buff_size);
 			printf("%s", server_data);
 			memset(server_data, 0x00, buff_size);
 		}while(dc_status());
@@ -172,10 +172,6 @@ int ftp_ls(char*dir)
 
 		return 0;
 	}
-	free(server_data);
-	reply = get_server_reply();
-	printf("%s",reply);
-	free(reply);
 	return 0;
 }
 //FTP SYST
@@ -187,7 +183,7 @@ int ftp_syst()
 		return 0;
 	}
 
-	if (control_send(get_cc_socket(), "SYST\r\n", strlen("SYST\r\n"))<0)
+	if (data_send(get_cc_socket(), "SYST\r\n", strlen("SYST\r\n"))<0)
 	{
 		printf("Error sending the SYST command\n");
 		return 0;
@@ -219,7 +215,7 @@ int ftp_retr(char* dir)
 
 	ftp_type();
 
-	control_send(get_cc_socket(), message, strlen(message));
+	data_send(get_cc_socket(), message, strlen(message));
 	//if (data_send(get_cc_socket(), message, strlen(message))<0)
 	//{
 	//	printf("Error sending the RETR command\n");
@@ -258,7 +254,7 @@ int ftp_retr(char* dir)
 	gettimeofday(&start, 0);
 	do
 	{
-		buff_receive(get_dc_socket(), server_data, buff_size);
+		data_receive(server_data, buff_size);
 		fwrite(server_data, size, 1, file);
 		bytes++;
 
@@ -288,7 +284,7 @@ int ftp_cwd(char* dir)
 		char *message = (char*)malloc(sizeof(char)*50);
 		sprintf(message, "CWD %s%s", dir, comd_term);
 
-		if (control_send(get_cc_socket(), message, strlen(message))<0)
+		if (data_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the CWD command\n");
 			free(message);
@@ -314,7 +310,7 @@ int ftp_test()
 		printf("%s", message);
 
 
-		if (control_send(get_cc_socket(), message, strlen(message))<0)
+		if (data_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the CWD command\n");
 			free(message);
@@ -335,7 +331,7 @@ int ftp_type()
 {
 	if(cc_status())
 	{	
-		if (control_send(get_cc_socket(), "TYPE I N\r\n", 10)<0)
+		if (data_send(get_cc_socket(), "TYPE I N\r\n", 10)<0)
 		{
 			printf("Error sending the TYPE command\n");
 			return 0;
@@ -354,7 +350,7 @@ int ftp_cdup()
 {
 	if(cc_status())
 	{	
-		if (control_send(get_cc_socket(), "CDUP\r\n", strlen("CDUP\r\n"))<0)
+		if (data_send(get_cc_socket(), "CDUP\r\n", strlen("CDUP\r\n"))<0)
 		{
 			printf("Error sending the CDUP command\n");
 			return 0;
@@ -373,7 +369,7 @@ int ftp_pwd()
 {
 	if(cc_status())
 	{	
-		if (control_send(get_cc_socket(), "PWD\r\n", strlen("PWD\r\n"))<0)
+		if (data_send(get_cc_socket(), "PWD\r\n", strlen("PWD\r\n"))<0)
 		{
 			printf("Error sending the PWD command\n");
 			return 0;
@@ -396,7 +392,7 @@ int ftp_mkd(char* dir)
 		char *message = (char*)malloc(sizeof(char)*(strlen(dir)+7));
 		sprintf(message, "MKD %s%s", dir, comd_term);
 
-		if (control_send(get_cc_socket(), message, strlen(message))<0)
+		if (data_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("error sending the mkd command\n");
 			free(message);
@@ -421,7 +417,7 @@ int ftp_rmd(char* dir)
 		char *message = (char*)malloc(sizeof(char)*(strlen(dir)+7));
 		sprintf(message, "RMD %s%s", dir, comd_term);
 
-		if (control_send(get_cc_socket(), message, strlen(message))<0)
+		if (data_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the RMD command\n");
 			free(message);
@@ -446,7 +442,7 @@ int ftp_dele(char* file)
 		char *message = (char*)malloc(sizeof(char)*(strlen(file)+8));
 		sprintf(message, "DELE %s%s", file, comd_term);
 
-		if (control_send(get_cc_socket(), message, strlen(message))<0)
+		if (data_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the DELE command\n");
 			free(message);
@@ -454,11 +450,7 @@ int ftp_dele(char* file)
 		}
 		free(message);
 
-		char* server_reply = get_server_reply();
-		printf("%s", server_reply);
-		int res = handle_response(server_reply);
-		free(server_reply);
-		return res;
+		return get_server_reply();
 	}
 	printf("Not connected to any server\nTry open [Ip[Port]]\n");
 	return 0;
@@ -485,10 +477,10 @@ int ftp_stor(char* file)
 
 		ftp_type();
 
-		char *message = (char*)malloc(sizeof(char)*(strlen(file)+8));
+		char *message = (char*)malloc(sizeof(char)*50);
 		sprintf(message, "STOR %s%s", file, comd_term);
 
-		if (control_send(get_cc_socket(), message, strlen(message))<0)
+		if (server_send(get_cc_socket(), message, strlen(message))<0)
 		{
 			printf("Error sending the STOR command\n");
 			free(message);
@@ -505,14 +497,15 @@ int ftp_stor(char* file)
 
 		unsigned int dc_socket;
 		unsigned int size;
+		unsigned char* data;
 
 		size_t bytes;
 
 		struct timeval stop, start;
 
 		dc_socket = get_dc_socket();
-		size = sizeof(unsigned char)*buff_size;
-		unsigned char* data = malloc(sizeof(unsigned char)*buff_size);
+		size = sizeof(unsigned char);
+		data = (unsigned char*)malloc(sizeof(unsigned char));
 
 		bytes = 0;
 		gettimeofday(&start, 0);
@@ -524,12 +517,12 @@ int ftp_stor(char* file)
 				gettimeofday(&stop, 0);
 				break;
 			}
-			buff_send(dc_socket, data, size);
+			data_send(dc_socket, data, size);
 			bytes++;
 		}while(1);
 
-		//disconnect from data connection to
-		//indicate completeness of sending data
+		//disconnect from data connection toi
+		//indicate completned of sending data
 		server_disconnect(dc_socket);
 
 		fclose(ptr);
@@ -554,7 +547,7 @@ int ftp_quit()
 {
 	if(cc_status())
 	{	
-		if (control_send(get_cc_socket(), "QUIT\r\n", strlen("QUIT\r\n"))<0)
+		if (server_send(get_cc_socket(), "QUIT\n", strlen("QUIT\n"))<0)
 		{
 			printf("Error sending the QUIT command\n");
 			return 0;
@@ -574,14 +567,14 @@ int ftp_help()
 {
 	if(cc_status())
 	{
-		if (control_send(get_cc_socket(), "HELP\r\n", strlen("HELP\r\n"))<0)
+		if (server_send(get_cc_socket(), "HELP\n", strlen("HELP\n"))<0)
 		{
 			printf("Error sending the HELP command\n");
 			return 0;
 		}
 
 		char* server_reply = malloc(sizeof(char)*501);
-		control_receive(get_dc_socket(), server_reply, buff_size);
+		control_receive(server_reply);
 		printf("%s",server_reply);
 
 		int i=0;

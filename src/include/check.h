@@ -1,12 +1,10 @@
 #ifndef CHECK_H
 #define CHECK_H
 
-int check_ip(char*);
+int check_ip(char* string_to_check);
 
-int check_port(char*);
+int check_port(char* string_to_check);
 
-int check_local_filename(char*);
-
-int check_command(char*);
+int check_command(char* string_to_check);
 
 #endif

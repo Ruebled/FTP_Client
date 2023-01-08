@@ -18,10 +18,8 @@
 //try on creating a socket
 //
 
-
 //define structure for ftp connection needed data
 struct sockaddr_in server;
-
 
 //create socket address for "control" connection 
 int create_cc_socket()
@@ -154,41 +152,29 @@ int server_disconnect(int socket_desc)
 	return 0;
 }
 
-//send message to a given socket addr (control/data connection)
-int server_send(int socket_desc, char *message, int message_len)
-{
-	return send(socket_desc, message, message_len, 0);
-}
-
-int data_send(int socket_desc, unsigned char *message, int message_len)
-{
-	return send(socket_desc, message, message_len, 0);
-}
-
 //get message from server via control connection
-void control_receive(char* server_reply)
+void control_receive(int socket_desc, char* server_reply, int buff_s)
 {
-	int size = recv(get_cc_socket(), server_reply, 401, 0);
-	*(server_reply+size) = '\0';
+	recv(get_cc_socket(), server_reply, buff_s, 0);
 }
 
-
-void info_receive(unsigned char * server_data)
+void control_send(int socket_desc, unsigned char * server_reply, int buff_s)
 {
-	if((recv(get_dc_socket(), server_data, sizeof(unsigned char), 0)<1))
+	 send(socket_desc, server_reply, buff_s, 0);
+}
+
+//send message to a given socket addr (control/data connection)
+int buff_send(int socket_desc, unsigned char *message, int message_len)
+{
+	return send(socket_desc, message, message_len, 0);
+}
+
+int buff_receive(int socket_desc, unsigned char *server_data, int buff_s)
+{
+	if((recv(get_dc_socket(), server_data, sizeof(unsigned char)*buff_s, 0))<buff_s)
 	{
 		dc_disconnected();
 	}
+	return 0;
 }
 
-
-//get message from server via data connection
-//use O_NONBLOCK on socket_addr and wait for some period like max 5 ms, if not any response, close connection,
-//do a separate function for server_connect too
-void data_receive(unsigned char * server_data)
-{
-	if((recv(get_dc_socket(), server_data, sizeof(unsigned char)*1, 0)<1))
-	{
-		dc_disconnected();
-	}
-}

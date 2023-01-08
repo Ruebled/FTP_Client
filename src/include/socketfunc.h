@@ -1,22 +1,20 @@
 #ifndef SOCKETFUNC_H
 #define SOCKETFUNC_H
-#include <stdio.h>
 
 int create_cc_socket();
 
 int create_dc_socket();
 
-int server_connect(int, char*, int);
+int server_connect(int socket_desc , char* ip, int port);
 
-int server_disconnect(int);
+int server_disconnect(int socket_desc);
 
-int server_send(int, char*, int);
-int data_send(int, unsigned char*, int);
+int control_send(int socket_desc, char* message_to_send, int message_lenght);
 
-void control_receive(char*);
+void control_receive(int socket_desc, char* buffer, int buff_size);
 
-void data_receive(unsigned char*);
+int buff_send(int socket_desc, unsigned char* message_to_send, int message_lenght);
 
-void info_receive(unsigned char*);
+void buff_receive(int socket_desc, unsigned char* buffer, int buff_size);
 
 #endif

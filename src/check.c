@@ -107,7 +107,7 @@ int check_ip(char* ip)
 		return 0; 
 	}
 
-	//check if is number in range
+	//check if number is in range
 	for (int i=0; i<4; i++)
 	{
 		int num = conv_to_num(args[i]);
