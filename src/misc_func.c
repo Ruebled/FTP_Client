@@ -168,11 +168,11 @@ void ret_speed(int bytes, int sec, int msec)
 
 	if (speed/1048576)
 	{
-		printf("(%.3lf mbyte/sec)\n", (double)speed/(double)1048576);
+		printf("(%lf mbyte/sec)\n", (double)speed/(double)1048576);
 	}
 	else if (speed/1024)
 	{
-		printf("(%.3lf kbyte/sec)\n", (double)speed/(double)1024);
+		printf("(%lf kbyte/sec)\n", (double)speed/(double)1024);
 	}
 	else
 	{
@@ -188,13 +188,13 @@ void toUP(char* comd)
 	}
 }
 
-int is_occupied(char **args, int count)
+int is_occupied(char **args)
 {
-	for (int i=0; i<count; i++)
+	for (int i=0; i<4; i++)
 	{
 		if (!strcmp(*(args+i),"")) return i;
 	}
-	return count;
+	return 4;
 }
 
 int conv_to_num(char* str)
@@ -213,22 +213,24 @@ int conv_to_num(char* str)
 	}
 	return atoi(str);
 }
-#define cell_size 100
 
-char**  split_to_array(char* inputstr, const char *ch, int count)
+char**  split_to_array(char* inputstr, const char *ch)
 {
-	char* str = malloc(sizeof(char)*(strlen(inputstr)+1));
+	int input_len = strlen(inputstr);
+	char* str = malloc(sizeof(char)*(input_len+1));
 	strcpy(str, inputstr);
 	
-	char** args = (char**)malloc(sizeof(char*)*count);
-	for(size_t i=0; i<count; i++)
+	char** args = (char**)malloc(sizeof(char*)*4);
+	for(size_t i=0; i<4; i++)
 	{
-		*(args+i) = (char*)malloc(sizeof(char)*cell_size);
-		memset(*(args+i), 0x00, cell_size);
+		*(args+i) = (char*)malloc(sizeof(char)*100);
+		strcpy(*(args+i), "");
 	}
 
+	int count=0;
 	char* token = strtok(str, ch);
 	
+<<<<<<< HEAD
 	size_t inc = 0;
 	while(token != NULL && inc<count)
 	{
@@ -246,23 +248,73 @@ char**  split_to_array(char* inputstr, const char *ch, int count)
 		{
 			token = strtok(NULL, "");	
 		}
+=======
+	while( token != NULL && count<4)
+	{
+		trim(token);
+
+		strcpy(*(args+count++), token);
+
+		token = strtok(NULL, ch);	
+>>>>>>> parent of 22ebdd8 (split_to_array and destroy to be more universal)
 	}
 	free(str);
-	str = NULL;
 
 	return args;
 }
 
-void destroy(char** reply, int count)
+char**  split(char* inputstr)
 {
-	for(int i=0; i<count; i++)
+	int input_len = strlen(inputstr);
+	char* str = malloc(sizeof(char)*(input_len+1));
+	strcpy(str, inputstr);
+	
+	char** args = (char**)malloc(sizeof(char*)*2);
+	for(size_t i=0; i<2; i++)
 	{
+<<<<<<< HEAD
 		memset(*(reply+i), 0x00, cell_size);
 		free(*(reply+i));
 		*(reply+i) = NULL;
+=======
+		*(args+i) = (char*)malloc(sizeof(char)*100);
+		strcpy(*(args+i), "");
+	}
+
+	int count=0;
+	char* token = strtok(str, " ");
+	trim(token);
+
+	while( token != NULL && count<2)
+	{
+		trim(token);
+
+		strncpy(*(args+count++), token, strlen(token)+1);
+
+		token = strtok(NULL, "");	
+	}
+	free(str);
+
+	return args;
+}
+
+void destroy(char** reply)
+{
+	for(int i=0; i<4; i++)
+	{
+		free(*(reply+i++));
    	}
 	free(reply);
-	reply = NULL;
+}
+
+void destroy2(char** reply)
+{
+	for(int i=0; i<2; i++)
+	{
+		free(*(reply+i++));
+>>>>>>> parent of 22ebdd8 (split_to_array and destroy to be more universal)
+   	}
+	free(reply);
 }
 
 //Parse data port from EPSV reply

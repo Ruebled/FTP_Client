@@ -1,4 +1,6 @@
 # Client-FTP
-This is my first large project in _C language_.
+## To Do
+case of open 1.2.3.4 to have a timeout
 
-
+---
+on ^[[A key to reverse commands in history....aka a history

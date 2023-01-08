@@ -16,6 +16,123 @@
 
 char *getpass(const char *prompt);//get password without echoing
 
+<<<<<<< HEAD
+=======
+//Try to connect to a server in control connection
+int establish_control_connection(char* IP, int PORT)
+{
+	if(create_cc_socket()<0)
+	{
+		printf("Couldn't create socket\n");
+		return -1;
+	}			
+	if(server_connect(get_cc_socket(), IP, PORT)<0)
+	{
+		printf("Couln't connect to the server\n");
+		return -1;
+	}
+	cc_connected();
+	return get_server_reply();
+}
+
+int get_server_reply()
+{
+	char* server_reply = malloc(sizeof(char)*401);
+	control_receive(server_reply);
+	printf("%s",server_reply);
+
+	int res = handle_response(server_reply);
+
+	memset(server_reply, 0x00, 401);
+	free(server_reply);
+	return res;
+}
+
+//Try to connect via data channel
+int establish_data_connection()
+{
+	if(!create_dc_socket())
+	{
+		printf("Can't create data connection socket\nStrange....\n");
+		return 0;
+	}
+
+	if (server_send(get_cc_socket(), "EPSV\n", strlen("EPSV\n"))<0)
+	{
+		printf("Error sending the EPSV command\n");
+		return 0;
+	}
+
+	int data_port = get_server_reply();
+
+	if (!data_port)
+	{
+		return 0;
+	}
+
+	if(server_connect(get_dc_socket(), get_session_ip(), data_port)<0)
+	{
+		printf("Couldn't connect to data server\n");
+		return 0;
+	}
+	dc_connected();
+
+	return 1;
+}
+
+//Do response action to any reply server code
+int handle_response(char* sr)
+{
+	char** reply = split_to_array(sr, " ");
+
+	int reply_code = conv_to_num(*reply);
+
+	destroy(reply);
+
+	switch(reply_code)
+	{
+		case 257:
+		case 250:
+		case 200:
+		case 215:
+		case 502:
+		case 221:
+		case 150:
+		case 214:
+			return 0;
+
+		case 226:
+		case 450:
+		case 550:
+			dc_disconnected();
+			return 0;
+		case 220:
+			return ftp_user();
+
+		case 229:
+			return fetch_data_port(sr);
+
+		case 331:
+			return ftp_passwd();
+
+		case 230:
+			printf("Connected to the server\n");
+			return 0;
+
+		case 332:
+			printf("ACCT info required\nNot yet created the function\n");
+			return 0;
+		case 530:
+			cc_disconnected();
+			return 0;
+
+		default:
+			printf("Unknown return code %d\n", reply_code);
+			return 0;
+	}
+}
+
+>>>>>>> parent of 22ebdd8 (split_to_array and destroy to be more universal)
 //FTP OPEN
 int ftp_open(char **args) 
 {
@@ -598,6 +715,26 @@ int ftp_help()
 	return 0;
 }
 
+<<<<<<< HEAD
+=======
+//Parse data port from EPSV reply
+int fetch_data_port(char* sr)
+{
+	char** args = split_to_array(sr, "(");
+	char** bars_code = split_to_array(*(args+1), "|");
+
+	int data_code = conv_to_num(*(bars_code));
+	destroy(bars_code);
+	destroy(args);
+
+	if(data_code)
+	{
+		return data_code;
+	}
+	return 0;
+}
+
+>>>>>>> parent of 22ebdd8 (split_to_array and destroy to be more universal)
 //The following are the FTP commands:
 //which ain't implemented
 //
