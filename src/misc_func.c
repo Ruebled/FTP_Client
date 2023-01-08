@@ -236,10 +236,14 @@ char**  split_to_array(char* inputstr, const char *ch)
 	{
 		trim(token);
 
+<<<<<<< HEAD
 		strcpy(*(args+inc), token);
 		//*(*(args+inc)+strlen(token)) = '\0';
 
 		inc++;
+=======
+		strcpy(*(args+inc++), token);
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 		if(inc < count-1)
 		{
 			token = strtok(NULL, ch);	
@@ -275,6 +279,7 @@ char**  split(char* inputstr)
 <<<<<<< HEAD
 		memset(*(reply+i), 0x00, cell_size);
 		free(*(reply+i));
+<<<<<<< HEAD
 		*(reply+i) = NULL;
 =======
 		*(args+i) = (char*)malloc(sizeof(char)*100);
@@ -303,6 +308,9 @@ void destroy(char** reply)
 	for(int i=0; i<4; i++)
 	{
 		free(*(reply+i++));
+=======
+		*(reply+i++) = NULL;
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
    	}
 	free(reply);
 }

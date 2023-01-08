@@ -11,9 +11,12 @@
 #include "include/trim.h"
 #include "include/misc_func.h"
 
+<<<<<<< HEAD
 #define comd_term "\r\n"
 #define buff_size 1024
 
+=======
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 char *getpass(const char *prompt);//get password without echoing
 
 <<<<<<< HEAD
@@ -188,11 +191,18 @@ int ftp_user()
 	char* input = (char*)malloc(sizeof(char)*32);
 
 	printf("USER: ");
+<<<<<<< HEAD
 	fgets(input, 32, stdin);
 	trim(input);
 	
    	char* message = (char*)malloc(sizeof(char)*(strlen(input)+8));
 	sprintf(message, "USER %s%s", input, comd_term);	
+=======
+	fgets(input, 50, stdin);
+
+	char* message = (char*)malloc(sizeof(char)*57);
+	sprintf(message, "USER %s", input);	
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 
 	free(input);
 
@@ -217,8 +227,13 @@ int ftp_passwd()
 {
 	char* input = getpass("PASS: ");
 	
+<<<<<<< HEAD
 	char* message = (char*)malloc(sizeof(char)*(strlen(input)+8));
 	sprintf(message, "PASS %s%s", input, comd_term);	
+=======
+	char* message = (char*)malloc(sizeof(input)+6);
+	sprintf(message, "PASS %s\n", input);	
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 
 	free(input);
 
@@ -255,11 +270,11 @@ int ftp_ls(char*dir)
 	char *string = (char*)malloc(sizeof(char)*50);
 	if(strcmp(dir, ""))
 	{
-		sprintf(string, "LIST %s%s",  dir, comd_term);
+		sprintf(string, "LIST %s\n",  dir);
 	}
 	else
 	{
-		sprintf(string, "LIST%s", comd_term);
+		sprintf(string, "LIST\n");
 	}
 
 	if (control_send(get_cc_socket(), string, strlen(string))<0)
@@ -304,7 +319,11 @@ int ftp_syst()
 		return 0;
 	}
 
+<<<<<<< HEAD
 	if (control_send(get_cc_socket(), "SYST\r\n", strlen("SYST\r\n"))<0)
+=======
+	if (server_send(get_cc_socket(), "SYST\n", strlen("SYST\n"))<0)
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 	{
 		printf("Error sending the SYST command\n");
 		return 0;
@@ -331,8 +350,13 @@ int ftp_retr(char* dir)
 		return 0;
 	}
 
+<<<<<<< HEAD
 	char *message = (char*)malloc(sizeof(char)*(strlen(dir)+8));
 	sprintf(message, "RETR %s%s", dir, comd_term);
+=======
+	char *message = (char*)malloc(sizeof(char)*50);
+	sprintf(message, "RETR %s\n", dir);
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 
 	ftp_type();
 
@@ -403,7 +427,7 @@ int ftp_cwd(char* dir)
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "CWD %s%s", dir, comd_term);
+		sprintf(message, "CWD %s\n", dir);
 
 		if (control_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -427,7 +451,7 @@ int ftp_test()
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "ABOR\r\n");
+		sprintf(message, "ABOR\n");
 		printf("%s", message);
 
 
@@ -510,8 +534,13 @@ int ftp_mkd(char* dir)
 {
 	if(cc_status())
 	{	
+<<<<<<< HEAD
 		char *message = (char*)malloc(sizeof(char)*(strlen(dir)+7));
 		sprintf(message, "MKD %s%s", dir, comd_term);
+=======
+		char *message = (char*)malloc(sizeof(char)*50);
+		sprintf(message, "MKD %s\n", dir);
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 
 		if (control_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -535,8 +564,13 @@ int ftp_rmd(char* dir)
 {
 	if(cc_status())
 	{	
+<<<<<<< HEAD
 		char *message = (char*)malloc(sizeof(char)*(strlen(dir)+7));
 		sprintf(message, "RMD %s%s", dir, comd_term);
+=======
+		char *message = (char*)malloc(sizeof(char)*50);
+		sprintf(message, "RMD %s\n", dir);
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 
 		if (control_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -560,8 +594,13 @@ int ftp_dele(char* file)
 {
 	if(cc_status())
 	{	
+<<<<<<< HEAD
 		char *message = (char*)malloc(sizeof(char)*(strlen(file)+8));
 		sprintf(message, "DELE %s%s", file, comd_term);
+=======
+		char *message = (char*)malloc(sizeof(char)*50);
+		sprintf(message, "DELE %s\n", file);
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 
 		if (control_send(get_cc_socket(), message, strlen(message))<0)
 		{
@@ -602,8 +641,13 @@ int ftp_stor(char* file)
 
 		ftp_type();
 
+<<<<<<< HEAD
 		char *message = (char*)malloc(sizeof(char)*(strlen(file)+8));
 		sprintf(message, "STOR %s%s", file, comd_term);
+=======
+		char *message = (char*)malloc(sizeof(char)*50);
+		sprintf(message, "STOR %s\n", file);
+>>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
 
 		if (control_send(get_cc_socket(), message, strlen(message))<0)
 		{
