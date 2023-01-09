@@ -158,12 +158,14 @@ int control_receive(int socket_desc, char* server_reply, int buff_s)
 	return recv(socket_desc, server_reply, buff_s, 0);
 }
 
-void control_send(int socket_desc, unsigned char * message, int buff_s)
+int control_send(int socket_desc, unsigned char * message, int buff_s)
 {
-	 if (send(socket_desc, message, buff_s, 0)<0)
+	int size = send(socket_desc, message, buff_s, 0);
+	 if (size<0)
 	 {
-		 cc_disconnected();
+		 return -1;
 	 }
+	 return 1;
 }
 
 //send message to a given socket addr (control/data connection)
@@ -181,4 +183,3 @@ int buff_receive(int socket_desc, unsigned char *server_data, int buff_s)
 	}
 	return size;
 }
-

@@ -21,6 +21,16 @@ char* get_server_reply()
 	char* server_reply = (char*)malloc(sizeof(char)*buff_reply);
 	memset(server_reply, 0x00, buff_reply);
 	control_receive(get_cc_socket(), server_reply, buff_reply);
+	if(!strcmp(server_reply, ""))
+	{
+		server_disconnect(get_cc_socket());
+		cc_disconnected();
+		set_dc_socket(-1);
+		set_cc_socket(-1);
+		set_session_ip("");
+
+		return server_reply;
+	}
 
 	return server_reply;
 }
@@ -90,6 +100,10 @@ int establish_data_connection()
 //Do response action to any reply server code
 int handle_response(char* sr)
 {
+	if(!strcmp(sr, ""))
+	{
+		return 0;
+	}
 	char** reply = split_to_array(sr, " ", 1);
 
 	int reply_code = conv_to_num(*reply);
@@ -100,7 +114,6 @@ int handle_response(char* sr)
 	{
 		case 257:
 		case 250:
-		case 200:
 		case 215:
 		case 502:
 		case 221:
@@ -108,6 +121,8 @@ int handle_response(char* sr)
 		case 214:
 			return 0;
 
+		case 200:
+			return 1;
 		case 226:
 		case 450:
 		case 550:
@@ -137,7 +152,9 @@ int handle_response(char* sr)
 		default:
 			printf("Unknown return code %d\n", reply_code);
 			return 0;
-	} }
+	} 
+}
+
 void ret_time(int sec, int usec)
 {
 	if(usec<0) usec=-usec;

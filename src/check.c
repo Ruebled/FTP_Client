@@ -17,6 +17,7 @@ int check_command(char *com)
 	if (!strcmp(*args, "TEST"))
 	{
 		ftp_test();
+		return 0;
 	}
 
 	if (!strcmp(*args,"OPEN"))

@@ -151,7 +151,7 @@ int ftp_ls(char*dir)
 	free(string);
 	
 	char *reply = get_server_reply();
-	printf("%s", reply);
+	free(reply);
 
 	unsigned char *server_data = (unsigned char*)malloc(sizeof(unsigned char)*buff_size);
 	memset(server_data, 0x00, buff_size);
@@ -166,8 +166,8 @@ int ftp_ls(char*dir)
 	}while(dc_status());
 
 	reply = get_server_reply();
-	printf("%s", reply);
 	free(reply);
+
 	free(server_data);
 	return 0;
 }
@@ -306,7 +306,7 @@ int ftp_test()
 	if(cc_status())
 	{	
 		char *message = (char*)malloc(sizeof(char)*50);
-		sprintf(message, "ABOR\r\n");
+		sprintf(message, "noop\r\n");
 		printf("%s", message);
 
 
@@ -319,7 +319,7 @@ int ftp_test()
 		free(message);
 
 		char* server_reply = get_server_reply();
-		//printf("%s", server_reply);
+		printf("%s", server_reply);
 		int res = handle_response(server_reply);
 		free(server_reply);
 		return res;
@@ -376,7 +376,7 @@ int ftp_pwd()
 		}
 
 		char* server_reply = get_server_reply();
-		//printf("%s", server_reply);
+		printf("%s", server_reply);
 		int res = handle_response(server_reply);
 		free(server_reply);
 		return res;
@@ -590,7 +590,7 @@ int ftp_help()
 		char* server_reply = (char*)malloc(sizeof(char)*buff_reply);
 
 		control_receive(get_cc_socket(), server_reply, buff_reply);	
-		//printf("%s", server_reply);
+		printf("%s", server_reply);
 		memset(server_reply, 0x00, buff_reply);
 
 		free(server_reply);

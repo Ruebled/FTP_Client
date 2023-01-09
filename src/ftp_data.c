@@ -1,7 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "include/ftp_data.h"
+#include "include/ftpcommands.h"
+#include "include/socketfunc.h"
+#include "include/misc_func.h"
 
 
 struct server_status status;
@@ -37,7 +41,27 @@ char* get_session_ip()
 //return control connection status
 int cc_status()
 {
-	return status.cc_status;
+
+	if (!status.cc_status)
+	{
+		return 0;
+	}
+	char *message = (char*)malloc(sizeof(char)*50);
+	sprintf(message, "noop\r\n");
+
+
+	if (control_send(get_cc_socket(), message, strlen(message))<1)
+	{
+		cc_disconnected();
+		free(message);
+		return 0;
+	}
+	free(message);
+
+	char* server_reply = get_server_reply();
+	int res = handle_response(server_reply);
+	free(server_reply);
+	return res;
 }
 
 //change control connection to connected
