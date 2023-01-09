@@ -13,13 +13,15 @@
 #include "include/ftpcommands.h"
 
 #define buff_size 1024
+#define buff_reply 128
 
 
 char* get_server_reply()
 {
-	char* server_reply = (char*)malloc(sizeof(char)*buff_size);
-	control_receive(get_cc_socket(), server_reply, buff_size);
-	
+	char* server_reply = (char*)malloc(sizeof(char)*buff_reply);
+	memset(server_reply, 0x00, buff_reply);
+	control_receive(get_cc_socket(), server_reply, buff_reply);
+
 	return server_reply;
 }
 
@@ -42,7 +44,6 @@ int establish_control_connection(char* IP, int PORT)
 	free(server_resp);
 	return res;
 }
-
 
 //Try to connect via data channel
 int establish_data_connection()
@@ -131,16 +132,15 @@ int handle_response(char* sr)
 			return 0;
 		case 530:
 			cc_disconnected();
-			return 0;
+			return -1;
 
 		default:
 			printf("Unknown return code %d\n", reply_code);
 			return 0;
-	}
-}
-void ret_time(int sec, int msec)
+	} }
+void ret_time(int sec, int usec)
 {
-	if(msec<0) msec=-msec;
+	if(usec<0) usec=-usec;
 
 	if (sec/3600)
 	{
@@ -156,15 +156,16 @@ void ret_time(int sec, int msec)
 	{
 		printf("%d %s ", sec, ((sec>1)?"seconds":"second"));
 	}
-	if (msec)
+	if (usec)
 	{
+		int msec = (int)(usec/1000);
 		printf("%d %s ", msec, ((msec>1)?"miliseconds":"milisecond"));
 	}
 }
 
-void ret_speed(int bytes, int sec, int msec)
+void ret_speed(int bytes, int sec, int usec)
 {
-	int speed = (int)((double)bytes/((double)sec+(double)msec/(double)1000));
+	long int speed = (int)((double)bytes/((double)sec+(double)usec/(double)1000000));
 
 	if (speed/1048576)
 	{
@@ -176,7 +177,7 @@ void ret_speed(int bytes, int sec, int msec)
 	}
 	else
 	{
-		printf("(%d byte/sec)\n", speed);
+		printf("(%ld byte/sec)\n", speed);
 	}
 }
 
@@ -188,9 +189,9 @@ void toUP(char* comd)
 	}
 }
 
-int is_occupied(char **args)
+int is_occupied(char **args, int count)
 {
-	for (int i=0; i<4; i++)
+	for (int i=0; i<count; i++)
 	{
 		if (!strcmp(*(args+i),"")) return i;
 	}
@@ -214,37 +215,30 @@ int conv_to_num(char* str)
 	return atoi(str);
 }
 
-char**  split_to_array(char* inputstr, const char *ch)
+char**  split_to_array(char* inputstr, const char *ch, int count)
 {
 	int input_len = strlen(inputstr);
 	char* str = malloc(sizeof(char)*(input_len+1));
 	strcpy(str, inputstr);
 	
-	char** args = (char**)malloc(sizeof(char*)*4);
-	for(size_t i=0; i<4; i++)
+	char** args = (char**)malloc(sizeof(char*)*count);
+	for(size_t i=0; i<count; i++)
 	{
-		*(args+i) = (char*)malloc(sizeof(char)*100);
-		strcpy(*(args+i), "");
+		*(args+i) = (char*)malloc(sizeof(char)*buff_size);
+		memset(*(args+i), 0x00, buff_size);
 	}
 
-	int count=0;
 	char* token = strtok(str, ch);
 	
-<<<<<<< HEAD
 	size_t inc = 0;
 	while(token != NULL && inc<count)
 	{
 		trim(token);
 
-<<<<<<< HEAD
 		strcpy(*(args+inc), token);
 		//*(*(args+inc)+strlen(token)) = '\0';
 
-		inc++;
-=======
-		strcpy(*(args+inc++), token);
->>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
-		if(inc < count-1)
+		if(inc < count)
 		{
 			token = strtok(NULL, ch);	
 		}
@@ -252,78 +246,24 @@ char**  split_to_array(char* inputstr, const char *ch)
 		{
 			token = strtok(NULL, "");	
 		}
-=======
-	while( token != NULL && count<4)
-	{
-		trim(token);
-
-		strcpy(*(args+count++), token);
-
-		token = strtok(NULL, ch);	
->>>>>>> parent of 22ebdd8 (split_to_array and destroy to be more universal)
+		inc++;
 	}
 	free(str);
 
 	return args;
 }
 
-char**  split(char* inputstr)
+
+void destroy(char** reply, int count)
 {
-	int input_len = strlen(inputstr);
-	char* str = malloc(sizeof(char)*(input_len+1));
-	strcpy(str, inputstr);
-	
-	char** args = (char**)malloc(sizeof(char*)*2);
-	for(size_t i=0; i<2; i++)
+	for(int i=0; i<count; i++)
 	{
-<<<<<<< HEAD
-		memset(*(reply+i), 0x00, cell_size);
 		free(*(reply+i));
-<<<<<<< HEAD
 		*(reply+i) = NULL;
-=======
-		*(args+i) = (char*)malloc(sizeof(char)*100);
-		strcpy(*(args+i), "");
-	}
-
-	int count=0;
-	char* token = strtok(str, " ");
-	trim(token);
-
-	while( token != NULL && count<2)
-	{
-		trim(token);
-
-		strncpy(*(args+count++), token, strlen(token)+1);
-
-		token = strtok(NULL, "");	
-	}
-	free(str);
-
-	return args;
-}
-
-void destroy(char** reply)
-{
-	for(int i=0; i<4; i++)
-	{
-		free(*(reply+i++));
-=======
-		*(reply+i++) = NULL;
->>>>>>> parent of 4632d7b (Changed server message parameter from \n to \r\n)
    	}
 	free(reply);
 }
 
-void destroy2(char** reply)
-{
-	for(int i=0; i<2; i++)
-	{
-		free(*(reply+i++));
->>>>>>> parent of 22ebdd8 (split_to_array and destroy to be more universal)
-   	}
-	free(reply);
-}
 
 //Parse data port from EPSV reply
 int fetch_data_port(char* sr)

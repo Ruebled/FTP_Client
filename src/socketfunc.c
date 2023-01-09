@@ -153,14 +153,17 @@ int server_disconnect(int socket_desc)
 }
 
 //get message from server via control connection
-void control_receive(int socket_desc, char* server_reply, int buff_s)
+int control_receive(int socket_desc, char* server_reply, int buff_s)
 {
-	recv(get_cc_socket(), server_reply, buff_s, 0);
+	return recv(socket_desc, server_reply, buff_s, 0);
 }
 
-void control_send(int socket_desc, unsigned char * server_reply, int buff_s)
+void control_send(int socket_desc, unsigned char * message, int buff_s)
 {
-	 send(socket_desc, server_reply, buff_s, 0);
+	 if (send(socket_desc, message, buff_s, 0)<0)
+	 {
+		 cc_disconnected();
+	 }
 }
 
 //send message to a given socket addr (control/data connection)
@@ -171,10 +174,11 @@ int buff_send(int socket_desc, unsigned char *message, int message_len)
 
 int buff_receive(int socket_desc, unsigned char *server_data, int buff_s)
 {
-	if((recv(get_dc_socket(), server_data, sizeof(unsigned char)*buff_s, 0))<buff_s)
+	int size = recv(socket_desc, server_data, buff_s, 0);
+	if(size < 1)
 	{
 		dc_disconnected();
 	}
-	return 0;
+	return size;
 }
 

@@ -13,22 +13,15 @@ void ret_speed(int bytes, int sec, int msec);
 
 void toUP(char*);
 
-int is_occupied(char* []);
+int is_occupied(char* [], int count);
 
 int conv_to_num(char*);
 
-char** split_to_array(char*, const char*);
+char** split_to_array(char*, const char*, int count);
 
-char** split(char*);
-
-<<<<<<< HEAD
 int fetch_data_port(char* sr);
 
 char* get_server_reply();
 
-=======
-void destroy(char** args);
-
-void destroy2(char** args);
->>>>>>> parent of 22ebdd8 (split_to_array and destroy to be more universal)
+void destroy(char** args, int count);
 #endif
