@@ -98,13 +98,13 @@ int check_command(char *com)
 int check_ip(char* ip)
 {
 	char** args;
-	args = split_to_array(ip, ".", 4);
+	args = split_to_array(ip, ".", 5);
 
-	int sets = is_occupied(args, 4);
+	int sets = is_occupied(args, 5);
 
-	if (sets<4)
+	if (sets!=4)
 	{
-		destroy(args, 4);
+		destroy(args, 5);
 		return 0; 
 	}
 
@@ -114,11 +114,11 @@ int check_ip(char* ip)
 		int num = conv_to_num(args[i]);
 		if (num<0 || num>255) 
 		{
-			destroy(args, 4);
+			destroy(args, 5);
 			return 0;
 		}
 	}
-	destroy(args, 4);
+	destroy(args, 5);
 	return 1;
 }
 //

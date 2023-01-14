@@ -211,13 +211,13 @@ int ftp_retr(char* dir)
 	memset(message, 0x00, (strlen(dir)+8));
 	sprintf(message, "RETR %s%s", dir, comd_term);
 
-	ftp_type();
+	//ftp_type();
 
 	control_send(get_cc_socket(), message, strlen(message));
 	free(message);
 	
 	char* server_reply = get_server_reply();
-	//printf("%s", server_reply);
+	printf("%s", server_reply);
 	handle_response(server_reply);
 	free(server_reply);
 
@@ -479,7 +479,7 @@ int ftp_stor(char* file)
 			return 0;
 		}
 
-		ftp_type();
+		//ftp_type();
 
 		char *message = (char*)malloc(sizeof(char)*(strlen(file)+8));
 		sprintf(message, "STOR %s%s", file, comd_term);
@@ -494,6 +494,10 @@ int ftp_stor(char* file)
 
 		char* reply = get_server_reply();
 		printf("%s", reply);
+		if(handle_response(reply)<0)
+		{
+			return 0;
+		}
 		free(reply);
 
 		unsigned int dc_socket;

@@ -41,27 +41,7 @@ char* get_session_ip()
 //return control connection status
 int cc_status()
 {
-
-	if (!status.cc_status)
-	{
-		return 0;
-	}
-	char *message = (char*)malloc(sizeof(char)*50);
-	sprintf(message, "noop\r\n");
-
-
-	if (control_send(get_cc_socket(), message, strlen(message))<1)
-	{
-		cc_disconnected();
-		free(message);
-		return 0;
-	}
-	free(message);
-
-	char* server_reply = get_server_reply();
-	int res = handle_response(server_reply);
-	free(server_reply);
-	return res;
+	return status.cc_status;
 }
 
 //change control connection to connected

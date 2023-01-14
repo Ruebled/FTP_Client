@@ -104,6 +104,7 @@ int handle_response(char* sr)
 	{
 		return 0;
 	}
+	printf("%s", sr);
 	char** reply = split_to_array(sr, " ", 1);
 
 	int reply_code = conv_to_num(*reply);
@@ -145,6 +146,10 @@ int handle_response(char* sr)
 		case 332:
 			printf("ACCT info required\nNot yet created the function\n");
 			return 0;
+		case 553:
+			dc_disconnected();
+			return -1;
+		case 421:
 		case 530:
 			cc_disconnected();
 			return -1;
@@ -176,7 +181,12 @@ void ret_time(int sec, int usec)
 	if (usec)
 	{
 		int msec = (int)(usec/1000);
-		printf("%d %s ", msec, ((msec>1)?"miliseconds":"milisecond"));
+		if(msec)
+		{
+			printf("%d %s ", msec, ((msec>1)?"miliseconds":"milisecond"));
+			return;
+		}
+		printf("%d %s ", usec, ((usec>1)?"microseconds":"microsecond"));
 	}
 }
 
@@ -208,11 +218,12 @@ void toUP(char* comd)
 
 int is_occupied(char **args, int count)
 {
-	for (int i=0; i<count; i++)
+	int i;
+	for (i=0; i<count; i++)
 	{
 		if (!strcmp(*(args+i),"")) return i;
 	}
-	return 4;
+	return i;
 }
 
 int conv_to_num(char* str)
@@ -255,7 +266,8 @@ char**  split_to_array(char* inputstr, const char *ch, int count)
 		strcpy(*(args+inc), token);
 		//*(*(args+inc)+strlen(token)) = '\0';
 
-		if(inc < count)
+		inc++;
+		if(inc < count-1)
 		{
 			token = strtok(NULL, ch);	
 		}
@@ -263,7 +275,6 @@ char**  split_to_array(char* inputstr, const char *ch, int count)
 		{
 			token = strtok(NULL, "");	
 		}
-		inc++;
 	}
 	free(str);
 
