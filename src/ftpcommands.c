@@ -600,13 +600,12 @@ int ftp_help()
 		free(server_reply);
 		return 0;
 	}
-	printf("open [IP] [PORT]\n"
-			"*For IP - supports only IPv4"
-			"\n*For PORT (optional field) for \n"
-			"default port 21, write for other\n"
-			"---\n"
-			"Suport for connection using DNS on to do list\n"
-			"Quit => close the client\n"
+	printf("==Welcome==\nFor starters try:\nopen [IP] [PORT]\n"
+			"\t*IP - supports only IPv4"
+			"\n\t*PORT (optional field) used to define another port, default port 21\n"
+			"\t---\n"
+			"\tSuport for connection using DNS is on to do list\n"
+			"'quit' to close the client\n"
 			);
 
 	return 0;

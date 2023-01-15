@@ -104,7 +104,6 @@ int handle_response(char* sr)
 	{
 		return 0;
 	}
-	printf("%s", sr);
 	char** reply = split_to_array(sr, " ", 1);
 
 	int reply_code = conv_to_num(*reply);
